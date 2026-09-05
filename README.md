@@ -1,7 +1,6 @@
-
 <div align="center">
 
-# 🤖 Corinna AI — SaaS AI Chatbot Platform
+# Corinna AI — SaaS AI Chatbot Platform
 
 A multi-tenant SaaS platform that lets businesses spin up an AI-powered sales & support chatbot for their website, complete with lead capture, live handoff, appointment booking, checkout, and email marketing.
 
@@ -16,144 +15,144 @@ A multi-tenant SaaS platform that lets businesses spin up an AI-powered sales & 
 
 </div>
 
----
+<br>
 
-## 📖 Overview
+## Overview
 
 **Corinna AI** is a Next.js 14 SaaS application that gives businesses an embeddable AI chatbot for their domain. Each customer ("user") can register one or more **domains**, customize a chatbot for each, and let the bot:
 
-- Greet visitors and capture their email
-- Ask a configurable list of qualifying questions
-- Answer help-desk style FAQs
-- Hand off to a **live human agent** in real time when the conversation needs it
-- Book appointments
-- Sell products through a Stripe-powered checkout
-- Notify the business owner by email when a customer needs a real person
+* Greet visitors and capture their email
+* Ask a configurable list of qualifying questions
+* Answer help desk style FAQs
+* Hand off to a **live human agent** in real time when the conversation needs it
+* Book appointments
+* Sell products through a Stripe powered checkout
+* Notify the business owner by email when a customer needs a real person
 
-It's built as a real-world, production-shaped SaaS: authentication & billing plans, a Postgres data model via Prisma, real-time messaging via Pusher, transactional email via Nodemailer, and a component-driven dashboard UI built with shadcn/ui + Radix + Tailwind CSS.
+It's built as a real world, production shaped SaaS: authentication & billing plans, a Postgres data model via Prisma, real time messaging via Pusher, transactional email via Nodemailer, and a component driven dashboard UI built with shadcn/ui + Radix + Tailwind CSS.
 
----
+<br>
 
-## ✨ Key Features
+## Key Features
 
 | Area | Description |
 |---|---|
-| 🔐 **Authentication** | Clerk-based sign-up/sign-in, protected dashboard routes via middleware |
-| 🌐 **Multi-domain / multi-tenant** | Each user can register multiple domains, each with its own chatbot, help desk, and customers |
-| 🤖 **AI Chatbot** | OpenAI (GPT) powered conversational agent that qualifies leads, answers FAQs, and redirects to booking/checkout links |
-| 🧑‍💻 **Live Chat Handoff** | Conversations can escalate from bot to a real-time human operator via Pusher channels |
-| 📅 **Appointments** | Customers can book time slots directly from the chat |
-| 🛒 **Checkout / Payments** | Stripe Connect integration lets each business accept payments for products sold via the bot |
-| 📧 **Email Marketing** | Campaign creation and customer email templates |
-| 🎨 **Chatbot customization** | Configurable welcome message, icon, background, and text color per domain |
-| 📊 **Dashboard** | Conversations inbox, appointment calendar, integrations, and account settings |
-| 💳 **Subscription Plans** | `STANDARD`, `PRO`, `ULTIMATE` billing plans that gate the number of domains a user can connect |
-| 🌗 **Theming** | Light/dark mode via `next-themes` |
-| 📎 **File uploads** | Uploadcare-powered image/icon uploads |
+| Authentication | Clerk based sign up/sign in, protected dashboard routes via middleware |
+| Multi domain / multi tenant | Each user can register multiple domains, each with its own chatbot, help desk, and customers |
+| AI Chatbot | OpenAI (GPT) powered conversational agent that qualifies leads, answers FAQs, and redirects to booking/checkout links |
+| Live Chat Handoff | Conversations can escalate from bot to a real time human operator via Pusher channels |
+| Appointments | Customers can book time slots directly from the chat |
+| Checkout / Payments | Stripe Connect integration lets each business accept payments for products sold via the bot |
+| Email Marketing | Campaign creation and customer email templates |
+| Chatbot customization | Configurable welcome message, icon, background, and text color per domain |
+| Dashboard | Conversations inbox, appointment calendar, integrations, and account settings |
+| Subscription Plans | `STANDARD`, `PRO`, `ULTIMATE` billing plans that gate the number of domains a user can connect |
+| Theming | Light/dark mode via `next-themes` |
+| File uploads | Uploadcare powered image/icon uploads |
 
----
+<br>
 
-## 🏗️ Tech Stack
+## Tech Stack
 
 **Framework & Language**
-- [Next.js 14](https://nextjs.org/) (App Router, Server Actions)
-- [React 18](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
+* [Next.js 14](https://nextjs.org/) (App Router, Server Actions)
+* [React 18](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
 
 **Database & ORM**
-- [PostgreSQL](https://www.postgresql.org/)
-- [Prisma ORM](https://www.prisma.io/)
+* [PostgreSQL](https://www.postgresql.org/)
+* [Prisma ORM](https://www.prisma.io/)
 
 **Auth & Payments**
-- [Clerk](https://clerk.com/) — authentication & user management
-- [Stripe](https://stripe.com/) (`stripe`, `@stripe/stripe-js`, `@stripe/react-stripe-js`) — payments & Stripe Connect
+* [Clerk](https://clerk.com/) — authentication & user management
+* [Stripe](https://stripe.com/) (`stripe`, `@stripe/stripe-js`, `@stripe/react-stripe-js`) — payments & Stripe Connect
 
 **AI & Realtime**
-- [OpenAI SDK](https://www.npmjs.com/package/openai) — chatbot conversation engine
-- [Pusher](https://pusher.com/) (`pusher`, `pusher-js`) — real-time chat/live handoff
+* [OpenAI SDK](https://www.npmjs.com/package/openai) — chatbot conversation engine
+* [Pusher](https://pusher.com/) (`pusher`, `pusher-js`) — real time chat/live handoff
 
 **UI**
-- [Tailwind CSS](https://tailwindcss.com/)
-- [shadcn/ui](https://ui.shadcn.com/) + [Radix UI](https://www.radix-ui.com/) primitives
-- [Lucide Icons](https://lucide.dev/)
-- [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/) for form validation
-- [Embla Carousel](https://www.embla-carousel.com/), [Sonner](https://sonner.emilkowal.ski/) (toasts), [Vaul](https://vaul.emilkowal.ski/) (drawers)
+* [Tailwind CSS](https://tailwindcss.com/)
+* [shadcn/ui](https://ui.shadcn.com/) + [Radix UI](https://www.radix-ui.com/) primitives
+* [Lucide Icons](https://lucide.dev/)
+* [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/) for form validation
+* [Embla Carousel](https://www.embla-carousel.com/), [Sonner](https://sonner.emilkowal.ski/) (toasts), [Vaul](https://vaul.emilkowal.ski/) (drawers)
 
 **Other integrations**
-- [Nodemailer](https://nodemailer.com/) — transactional email notifications
-- [Uploadcare](https://uploadcare.com/) — file/image uploads
-- [date-fns](https://date-fns.org/) / [react-day-picker](https://react-day-picker.js.org/) — scheduling utilities
+* [Nodemailer](https://nodemailer.com/) — transactional email notifications
+* [Uploadcare](https://uploadcare.com/) — file/image uploads
+* [date-fns](https://date-fns.org/) / [react-day-picker](https://react-day-picker.js.org/) — scheduling utilities
 
----
+<br>
 
-## 🗂️ Project Structure
+## Project Structure
 
 ```
 saas-ai-chatbot/
 ├── prisma/
-│   └── schema.prisma          # Data model (User, Domain, ChatBot, Customer, ChatRoom, Bookings, Campaign, etc.)
-├── public/                    # Static assets & images
+│   └── schema.prisma          (Data model: User, Domain, ChatBot, Customer, ChatRoom, Bookings, Campaign, etc.)
+├── public/                    (Static assets & images)
 ├── src/
-│   ├── actions/                # Server actions (business logic)
-│   │   ├── auth/                # Sign-up / sign-in helpers
-│   │   ├── bot/                 # AI chatbot conversation engine
-│   │   ├── conversation/        # Realtime conversation (Pusher) logic
-│   │   ├── dashboard/           # Dashboard data fetching
-│   │   ├── landing/              # Landing page content
-│   │   ├── mail / mailer/        # Email marketing & notification emails
-│   │   ├── payments/             # Stripe checkout / product logic
-│   │   ├── settings/             # Domain & chatbot settings
-│   │   ├── stripe/               # Stripe Connect account logic
-│   │   └── appointment/          # Booking logic
+│   ├── actions/                (Server actions / business logic)
+│   │   ├── auth/                (Sign up / sign in helpers)
+│   │   ├── bot/                 (AI chatbot conversation engine)
+│   │   ├── conversation/        (Realtime conversation / Pusher logic)
+│   │   ├── dashboard/           (Dashboard data fetching)
+│   │   ├── landing/              (Landing page content)
+│   │   ├── mail / mailer/        (Email marketing & notification emails)
+│   │   ├── payments/             (Stripe checkout / product logic)
+│   │   ├── settings/             (Domain & chatbot settings)
+│   │   ├── stripe/               (Stripe Connect account logic)
+│   │   └── appointment/          (Booking logic)
 │   ├── app/
-│   │   ├── (dashboard)/          # Authenticated dashboard routes
-│   │   │   ├── dashboard/          # Overview
-│   │   │   ├── conversation/       # Inbox / live chat
-│   │   │   ├── appointment/        # Appointment calendar
-│   │   │   ├── email-marketing/    # Campaigns
-│   │   │   ├── integration/        # Third-party integrations
-│   │   │   └── settings/           # Domain & billing settings
-│   │   ├── api/stripe/           # Stripe Connect API route
-│   │   ├── auth/                 # Sign-in / sign-up pages
-│   │   ├── blogs/                # Marketing blog pages
-│   │   ├── chatbot/               # Standalone embeddable chatbot widget
-│   │   ├── portal/[domainid]/     # Public customer-facing portal (appointments, payments)
-│   │   └── page.tsx               # Landing page
-│   ├── components/               # UI building blocks (dashboard, chatbot, forms, tables, etc.)
-│   ├── constants/                 # Static config/data
-│   ├── context/                   # React context providers (e.g. theme)
-│   ├── hooks/                      # Custom React hooks
-│   ├── lib/                        # Prisma client, utils
-│   ├── schemas/                    # Zod validation schemas
-│   └── middleware.ts               # Clerk route protection
+│   │   ├── (dashboard)/          (Authenticated dashboard routes)
+│   │   │   ├── dashboard/          (Overview)
+│   │   │   ├── conversation/       (Inbox / live chat)
+│   │   │   ├── appointment/        (Appointment calendar)
+│   │   │   ├── email-marketing/    (Campaigns)
+│   │   │   ├── integration/        (Third party integrations)
+│   │   │   └── settings/           (Domain & billing settings)
+│   │   ├── api/stripe/           (Stripe Connect API route)
+│   │   ├── auth/                 (Sign in / sign up pages)
+│   │   ├── blogs/                (Marketing blog pages)
+│   │   ├── chatbot/               (Standalone embeddable chatbot widget)
+│   │   ├── portal/[domainid]/     (Public customer facing portal: appointments, payments)
+│   │   └── page.tsx               (Landing page)
+│   ├── components/               (UI building blocks: dashboard, chatbot, forms, tables, etc.)
+│   ├── constants/                 (Static config/data)
+│   ├── context/                   (React context providers, e.g. theme)
+│   ├── hooks/                      (Custom React hooks)
+│   ├── lib/                        (Prisma client, utils)
+│   ├── schemas/                    (Zod validation schemas)
+│   └── middleware.ts               (Clerk route protection)
 ├── package.json
 └── tailwind.config.ts
 ```
 
----
+<br>
 
-## 🧬 Data Model
+## Data Model
 
-The Prisma schema (`prisma/schema.prisma`) models a multi-tenant chatbot SaaS:
+The Prisma schema (`prisma/schema.prisma`) models a multi tenant chatbot SaaS:
 
-- **User** — the business owner; has a Clerk ID, subscription (`Billings`), domains, and campaigns.
-- **Domain** — a website/business registered by a user; owns a `ChatBot`, `HelpDesk` entries, `FilterQuestions`, `Product`s, and `Customer`s.
-- **ChatBot** — per-domain bot configuration (welcome message, icon, colors, live-help toggle).
-- **Customer** — an end visitor who chatted with a domain's bot; has `CustomerResponses`, `ChatRoom`s, and `Bookings`.
-- **ChatRoom / ChatMessage** — conversation threads and messages, with a `live` flag for human handoff.
-- **Bookings** — appointment slots booked by customers.
-- **Campaign** — email marketing campaigns tied to a user and set of domains.
-- **Product** — items sold through a domain's chatbot checkout flow.
-- **Billings** — subscription plan (`STANDARD` / `PRO` / `ULTIMATE`) and remaining credits.
+* **User** — the business owner; has a Clerk ID, subscription (`Billings`), domains, and campaigns.
+* **Domain** — a website/business registered by a user; owns a `ChatBot`, `HelpDesk` entries, `FilterQuestions`, `Product`s, and `Customer`s.
+* **ChatBot** — per domain bot configuration (welcome message, icon, colors, live help toggle).
+* **Customer** — an end visitor who chatted with a domain's bot; has `CustomerResponses`, `ChatRoom`s, and `Bookings`.
+* **ChatRoom / ChatMessage** — conversation threads and messages, with a `live` flag for human handoff.
+* **Bookings** — appointment slots booked by customers.
+* **Campaign** — email marketing campaigns tied to a user and set of domains.
+* **Product** — items sold through a domain's chatbot checkout flow.
+* **Billings** — subscription plan (`STANDARD` / `PRO` / `ULTIMATE`) and remaining credits.
 
----
+<br>
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
-- **Node.js** ≥ 18
-- **PostgreSQL** database (local or hosted, e.g. Supabase/Neon/Railway)
-- Accounts/API keys for: **Clerk**, **OpenAI**, **Stripe**, **Pusher**, **Uploadcare**, and an SMTP-capable email account (e.g. Gmail app password)
+* **Node.js** version 18 or higher
+* **PostgreSQL** database (local or hosted, e.g. Supabase/Neon/Railway)
+* Accounts/API keys for: **Clerk**, **OpenAI**, **Stripe**, **Pusher**, **Uploadcare**, and an SMTP capable email account (e.g. Gmail app password)
 
 ### 1. Clone the repository
 
@@ -205,7 +204,7 @@ NODE_MAILER_EMAIL=
 NODE_MAILER_GMAIL_APP_PASSWORD=
 ```
 
-> ⚠️ Double-check the exact Clerk env var names required by your installed `@clerk/nextjs` version, and make sure your OpenAI/Stripe/Pusher/Uploadcare keys correspond to the correct environment (test vs. live).
+> Note: double check the exact Clerk env var names required by your installed `@clerk/nextjs` version, and make sure your OpenAI/Stripe/Pusher/Uploadcare keys correspond to the correct environment (test vs. live).
 
 ### 4. Set up the database
 
@@ -222,29 +221,29 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) to view the app.
 
----
+<br>
 
-## 🧭 Core Flows
+## Core Flows
 
 ### Business owner flow
 1. Sign up / sign in via Clerk.
 2. Register a domain from the dashboard (gated by subscription plan limits).
 3. Customize the chatbot (welcome message, colors, icon).
-4. Add help-desk Q&As, filter/qualifying questions, and products.
+4. Add help desk Q&As, filter/qualifying questions, and products.
 5. Monitor conversations, respond in real time when escalated, and manage bookings & campaigns.
 
-### End-customer flow
+### End customer flow
 1. Visitor lands on the business's site and opens the embedded chatbot.
 2. The AI bot greets them, collects their email, and asks qualifying questions.
 3. Depending on intent, the bot can:
-   - Continue answering FAQs / qualifying,
-   - Hand off to a live human agent (via Pusher) if the conversation goes out of scope,
-   - Provide an appointment booking link,
-   - Provide a checkout link to purchase a product via Stripe.
+   * Continue answering FAQs / qualifying
+   * Hand off to a live human agent (via Pusher) if the conversation goes out of scope
+   * Provide an appointment booking link
+   * Provide a checkout link to purchase a product via Stripe
 
----
+<br>
 
-## 📜 Available Scripts
+## Available Scripts
 
 | Script | Description |
 |---|---|
@@ -253,21 +252,21 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 | `npm run start` | Start the production server |
 | `npm run lint` | Run ESLint |
 
----
+<br>
 
-## 🗺️ Roadmap Ideas
+## Roadmap Ideas
 
-- [ ] Automated tests (unit/e2e)
-- [ ] Multi-language chatbot support
-- [ ] Analytics dashboard for conversation/lead metrics
-- [ ] Webhook-based Stripe event handling
-- [ ] Dockerized deployment setup
+* [ ] Automated tests (unit/e2e)
+* [ ] Multi language chatbot support
+* [ ] Analytics dashboard for conversation/lead metrics
+* [ ] Webhook based Stripe event handling
+* [ ] Dockerized deployment setup
 
----
+<br>
 
-## 🤝 Contributing
+## Contributing
 
-Contributions, issues, and feature requests are welcome!
+Contributions, issues, and feature requests are welcome.
 
 1. Fork the project
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
@@ -275,15 +274,15 @@ Contributions, issues, and feature requests are welcome!
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
----
+<br>
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License — feel free to use it as a learning resource or a base for your own SaaS.
 
----
+<br>
 
-## 👤 Author
+## Author
 
 **Zineddine Rebbouh**
 GitHub: [@Zineddine-Rebbouh](https://github.com/Zineddine-Rebbouh)
