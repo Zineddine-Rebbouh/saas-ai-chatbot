@@ -51,7 +51,7 @@ export const CreateProductForm = ({ id }: CreateProductFormProps) => {
           errors={errors}
           name="image"
           render={({ message }) => (
-            <p className="text-red-400 mt-2">
+            <p className="text-destructive mt-2">
               {message === 'Required' ? '' : message}
             </p>
           )}

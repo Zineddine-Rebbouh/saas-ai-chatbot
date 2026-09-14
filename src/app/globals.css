@@ -197,9 +197,9 @@
 
 /* ─── Glass Effect ───────────────────────────────────── */
 .glass {
-  background: rgba(255, 255, 255, 0.04);
+  background: hsl(var(--card) / 0.04);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid hsl(var(--border) / 0.5);
 }
 
 /* ─── Focus Ring ─────────────────────────────────────── */

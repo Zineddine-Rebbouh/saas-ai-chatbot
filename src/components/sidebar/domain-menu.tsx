@@ -40,7 +40,7 @@ const DomainMenu = ({ domains, min }: Props) => {
         >
           <Loader loading={loading}>
             <form
-              className="mt-3 w-6/12 flex flex-col gap-3"
+              className="mt-3 w-full flex flex-col gap-3"
               onSubmit={onAddDomain}
             >
               <FormGenerator

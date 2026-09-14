@@ -87,7 +87,7 @@ const PortalForm = ({
       />
       {(step == 1 || step == 2) && (
         <div className="w-full flex justify-center">
-          <div className="w-[400px] grid grid-cols-2 gap-3">
+          <div className="w-full max-w-[400px] grid grid-cols-2 gap-3">
             <div
               className={cn(
                 'rounded-full h-2 col-span-1',

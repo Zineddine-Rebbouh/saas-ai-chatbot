@@ -11,7 +11,7 @@ type DomainUpdateProps = {
 
 export const DomainUpdate = ({ name, register, errors }: DomainUpdateProps) => {
   return (
-    <div className="flex gap-2 pt-5 items-end w-[400px]">
+    <div className="flex gap-2 pt-5 items-end w-full max-w-[400px]">
       <FormGenerator
         label="Domain name"
         register={register}

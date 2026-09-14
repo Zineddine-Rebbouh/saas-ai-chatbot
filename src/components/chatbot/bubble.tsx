@@ -71,7 +71,7 @@ const Bubble = ({ message, createdAt }: Props) => {
               <Link
                 className={cn(
                   'underline font-bold pl-2 hover:opacity-85 transition-opacity',
-                  message.role === 'assistant' ? 'text-primary' : 'text-white'
+                  message.role === 'assistant' ? 'text-primary' : 'text-primary-foreground'
                 )}
                 href={message.link}
                 target="_blank"

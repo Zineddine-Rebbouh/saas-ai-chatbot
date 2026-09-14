@@ -118,8 +118,8 @@ const EmailMarketing = ({ campaign, domains, subscription }: Props) => {
               <Card
                 key={camp.id}
                 className={cn(
-                  'p-5 min-w-[600px] cursor-pointer',
-                  campaignId == camp.id ? 'bg-gray-50' : ''
+                  'p-5 min-w-0 w-full cursor-pointer',
+                  campaignId == camp.id ? 'bg-muted' : ''
                 )}
                 onClick={() => onSelectCampaign(camp.id)}
               >
