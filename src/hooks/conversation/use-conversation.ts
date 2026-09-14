@@ -1,3 +1,4 @@
+import { useToast } from '@/components/ui/use-toast'
 import {
   onGetChatMessages,
   onGetDomainChatRooms,
@@ -6,7 +7,7 @@ import {
   onViewUnReadMessages,
 } from '@/actions/conversation'
 import { useChatContext } from '@/context/user-chat-context'
-import { getMonthName, pusherClient } from '@/lib/utils'
+import { getMonthName, isPusherConfigured, pusherClient } from '@/lib/utils'
 import {
   ChatBotMessageSchema,
   ConversationSearchSchema,
@@ -16,6 +17,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
 export const useConversation = () => {
+  const { toast } = useToast()
   const { register, watch } = useForm({
     resolver: zodResolver(ConversationSearchSchema),
     mode: 'onChange',
@@ -46,7 +48,12 @@ export const useConversation = () => {
           setChatRooms(rooms.customer)
         }
       } catch (error) {
-        console.log(error)
+        toast({
+          title: 'Error',
+          description: 'Could not search conversations — please try again.',
+        })
+      } finally {
+        setLoading(false)
       }
     })
     return () => search.unsubscribe()
@@ -58,11 +65,15 @@ export const useConversation = () => {
       const messages = await onGetChatMessages(id)
       if (messages) {
         setChatRoom(id)
-        loadMessages(false)
         setChats(messages[0].message)
       }
     } catch (error) {
-      console.log(error)
+      toast({
+        title: 'Error',
+        description: 'Could not load messages — please try again.',
+      })
+    } finally {
+      loadMessages(false)
     }
   }
   return {
@@ -117,6 +128,7 @@ export const useChatTime = (createdAt: Date, roomId: string) => {
 }
 
 export const useChatWindow = () => {
+  const { toast } = useToast()
   const { chats, loading, setChats, chatRoom } = useChatContext()
   const messageWindowRef = useRef<HTMLDivElement | null>(null)
   const { register, handleSubmit, reset } = useForm({
@@ -136,7 +148,7 @@ export const useChatWindow = () => {
   }, [chats, messageWindowRef])
 
   useEffect(() => {
-    if (chatRoom) {
+    if (chatRoom && isPusherConfigured) {
       pusherClient.subscribe(chatRoom)
       pusherClient.bind('realtime-mode', (data: any) => {
         setChats((prev) => [...prev, data.chat])
@@ -170,7 +182,10 @@ export const useChatWindow = () => {
         )
       }
     } catch (error) {
-      console.log(error)
+      toast({
+        title: 'Error',
+        description: 'Message could not be sent — please try again.',
+      })
     }
   })
 

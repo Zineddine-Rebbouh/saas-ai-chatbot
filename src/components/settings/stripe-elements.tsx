@@ -1,26 +1,35 @@
 'use client'
 
 import { Elements } from '@stripe/react-stripe-js'
-import { loadStripe } from '@stripe/stripe-js'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Loader } from '../loader'
 import { useStripeElements } from '@/hooks/billing/use-billing'
 import { PaymentForm } from './payment-form'
+import { isStripeConfigured, getStripe } from '@/lib/utils'
 
 type StripeElementsProps = {
   payment: 'STANDARD' | 'PRO' | 'ULTIMATE'
 }
 
 export const StripeElements = ({ payment }: StripeElementsProps) => {
-  const StripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISH_KEY!)
+  const [stripePromise, setStripePromise] = useState<any>(null)
+
+  useEffect(() => {
+    if (isStripeConfigured) {
+      getStripe().then((stripe) => {
+        if (stripe) setStripePromise(stripe)
+      })
+    }
+  }, [])
+
   const { stripeSecret, loadForm } = useStripeElements(payment)
   return (
     stripeSecret &&
-    StripePromise &&
+    stripePromise &&
     (payment == 'PRO' || payment == 'ULTIMATE') && (
       <Loader loading={loadForm}>
         <Elements
-          stripe={StripePromise}
+          stripe={stripePromise}
           options={{
             clientSecret: stripeSecret,
           }}

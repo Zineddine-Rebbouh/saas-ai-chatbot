@@ -1,7 +1,7 @@
 
 import SignInFormProvider from '@/components/forms/sign-in/form-provider'
+import SignInButton from '@/components/forms/sign-in/sign-in-button'
 import LoginForm from '@/components/forms/sign-in/login-form'
-import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import React from 'react'
 
@@ -13,12 +13,7 @@ const SignInPage = () => {
           <div className="flex flex-col gap-3">
             <LoginForm />
             <div className="w-full flex flex-col gap-3 items-center">
-              <Button
-                type="submit"
-                className="w-full"
-              >
-                Sign in
-              </Button>
+              <SignInButton />
               <p className="text-sm text-muted-foreground">
                 Don&apos;t have an account?{' '}
                 <Link
