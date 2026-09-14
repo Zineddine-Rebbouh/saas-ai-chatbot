@@ -19,7 +19,7 @@ export const PaymentForm = ({ plan }: PaymentFormProps) => {
       className="flex flex-col gap-5"
     >
       <div>
-        <h2 className="font-semibold text-xl text-black">Payment Method</h2>
+        <h2 className="font-semibold text-xl text-foreground">Payment Method</h2>
         <CardDescription>Enter your card details</CardDescription>
       </div>
       <PaymentElement />

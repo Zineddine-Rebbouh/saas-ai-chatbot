@@ -7,7 +7,7 @@ import React from 'react'
 
 const SignInPage = () => {
   return (
-    <div className="flex-1 py-36 md:px-16 w-full">
+    <div className="flex-1 py-16 lg:py-24 md:px-16 w-full">
       <div className="flex flex-col h-full gap-3">
         <SignInFormProvider>
           <div className="flex flex-col gap-3">
@@ -17,13 +17,13 @@ const SignInPage = () => {
                 type="submit"
                 className="w-full"
               >
-                Submit
+                Sign in
               </Button>
-              <p>
-                Don’t have an account?{' '}
+              <p className="text-sm text-muted-foreground">
+                Don&apos;t have an account?{' '}
                 <Link
                   href="/auth/sign-up"
-                  className="font-bold"
+                  className="font-semibold text-primary hover:text-primary/80 transition-colors"
                 >
                   Create one
                 </Link>

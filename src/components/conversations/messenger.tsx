@@ -43,28 +43,38 @@ const Messenger = (props: Props) => {
           </div>
         </Loader>
       </div>
-      <form
-        onSubmit={onHandleSentMessage}
-        className="flex px-3 pt-3 pb-10 flex-col backdrop-blur-sm bg-muted w-full"
-      >
-        <div className="flex justify-between">
-          <Input
+      <div className="p-4 bg-background/50 border-t border-border/40 backdrop-blur-sm">
+        <form
+          onSubmit={onHandleSentMessage}
+          className="flex items-center gap-3 bg-card border border-border/80 rounded-2xl p-2 pl-4 shadow-sm focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20 transition-all duration-150"
+        >
+          {/* Attachment button */}
+          <button
+            type="button"
+            className="p-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-xl transition-all duration-100 flex-shrink-0"
+            title="Attach file"
+          >
+            <PaperclipIcon size={18} />
+          </button>
+
+          {/* Input field */}
+          <input
             {...register('content')}
-            placeholder="Type your message..."
-            className="focus-visible:ring-0 flex-1 p-0 focus-visible:ring-offset-0 bg-muted rounded-none outline-none border-none"
+            placeholder={chatRoom ? "Type your message..." : "Select a conversation to start chatting"}
+            disabled={!chatRoom}
+            className="flex-1 bg-transparent border-none outline-none text-sm text-foreground placeholder:text-muted-foreground/70 py-2.5 focus:ring-0 min-w-0"
           />
+
+          {/* Send Button */}
           <Button
             type="submit"
-            className="mt-3 px-7"
+            className="px-5 py-2.5 bg-primary hover:bg-primary/95 text-primary-foreground text-sm font-semibold rounded-xl transition-all duration-150 hover:-translate-y-px active:translate-y-0 disabled:opacity-50 disabled:pointer-events-none"
             disabled={!chatRoom}
           >
             Send
           </Button>
-        </div>
-        <span>
-          <PaperclipIcon className='text-muted-foreground' />
-        </span>
-      </form>
+        </form>
+      </div>
     </div>
   )
 }

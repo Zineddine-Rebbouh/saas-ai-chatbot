@@ -32,12 +32,12 @@ const BillingSettings = async (props: Props) => {
           description="Tell us about yourself! What do you do? Let’s tailor your experience so it best suits you."
           trigger={
             plan && plan === 'STANDARD' ? (
-              <Card className="border-dashed bg-cream border-gray-400 w-full cursor-pointer h-[270px] flex justify-center items-center">
-                <CardContent className="flex gap-2 items-center">
-                  <div className="rounded-full border-2 p-1">
-                    <Plus className="text-gray-400" />
+              <Card className="border-dashed bg-card border-border hover:bg-secondary hover:border-primary/50 w-full cursor-pointer h-[270px] flex justify-center items-center transition-all duration-200 shadow-sm">
+                <CardContent className="flex flex-col gap-3 items-center">
+                  <div className="rounded-full border border-border bg-secondary p-3 shadow-inner">
+                    <Plus className="text-muted-foreground group-hover:text-primary transition-colors" size={20} />
                   </div>
-                  <CardDescription className="font-semibold">
+                  <CardDescription className="font-semibold text-foreground">
                     Upgrade Plan
                   </CardDescription>
                 </CardContent>

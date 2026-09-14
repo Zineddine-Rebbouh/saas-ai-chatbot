@@ -9,14 +9,16 @@ type Props = {
 
 const DashboardCard = ({ icon, title, value, sales }: Props) => {
   return (
-    <div className=" rounded-lg flex flex-col gap-3 pr-10 pl-10 py-10 md:pl-10 md:pr-20 border-[1px] border-border bg-cream dark:bg-muted md:w-fit w-full">
-      <div className="flex gap-3">
-        {icon}
-        <h2 className="font-bold text-xl">{title}</h2>
+    <div className="rounded-2xl flex flex-col gap-4 p-6 md:p-8 border border-border/60 bg-card hover:border-primary/30 transition-all duration-200 md:w-[260px] w-full shadow-sm hover:shadow-md group">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-105 transition-transform duration-200">
+          {icon}
+        </div>
+        <h3 className="font-semibold text-sm text-muted-foreground">{title}</h3>
       </div>
-      <p className="font-bold text-4xl">
+      <p className="font-display font-bold text-3xl text-foreground mt-2">
         {sales && '$'}
-        {value}
+        {value.toLocaleString()}
       </p>
     </div>
   )

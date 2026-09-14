@@ -47,7 +47,7 @@ const Page = async (props: Props) => {
                 className="rounded-xl overflow-hidden mt-4"
               >
                 <CardContent className="p-0 flex">
-                  <div className="w-4/12 text-xl bg-peach py-10 flex justify-center items-center font-bold">
+                  <div className="w-4/12 text-xl bg-primary/10 text-primary py-10 flex justify-center items-center font-bold">
                     {booking.slot}
                   </div>
                   <div className="flex flex-col flex-1">

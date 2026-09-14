@@ -91,13 +91,13 @@ const PortalForm = ({
             <div
               className={cn(
                 'rounded-full h-2 col-span-1',
-                step == 1 ? 'bg-orange' : 'bg-platinum'
+                step == 1 ? 'bg-primary' : 'bg-border'
               )}
             ></div>
             <div
               className={cn(
                 'rounded-full h-2 col-span-1',
-                step == 2 ? 'bg-orange' : 'bg-platinum'
+                step == 2 ? 'bg-primary' : 'bg-border'
               )}
             ></div>
           </div>

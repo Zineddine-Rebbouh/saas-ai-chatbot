@@ -36,7 +36,7 @@ export const CreateProductForm = ({ id }: CreateProductFormProps) => {
       <div className="flex flex-col items-start">
         <Label
           htmlFor="upload-product"
-          className="flex gap-2 p-3 rounded-lg bg-peach text-gray-600 cursor-pointer font-semibold text-sm items-center"
+          className="flex gap-2 p-3 rounded-lg bg-primary/10 text-muted-foreground cursor-pointer font-semibold text-sm items-center"
         >
           <Input
             {...register('image')}

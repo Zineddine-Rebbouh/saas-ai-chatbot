@@ -66,7 +66,7 @@ const BookAppointmentDate = ({
               <Card
                 onClick={() => onSlot(slot.slot)}
                 className={cn(
-                  currentSlot == slot.slot ? 'bg-grandis' : 'bg-peach',
+                  currentSlot == slot.slot ? 'bg-primary text-primary-foreground' : 'bg-primary/10',
                   'px-10 py-4',
                   bookings &&
                     bookings.some(
@@ -76,7 +76,7 @@ const BookAppointmentDate = ({
                         booking.slot == slot.slot
                     )
                     ? 'bg-gray-300'
-                    : 'cursor-pointer border-orange hover:bg-grandis transition duration-150 ease-in-out'
+                    : 'cursor-pointer border-primary hover:bg-primary/20 transition duration-150 ease-in-out'
                 )}
               >
                 <Input

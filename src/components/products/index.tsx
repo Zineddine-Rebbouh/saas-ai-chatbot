@@ -46,14 +46,11 @@ const ProductTable = ({ id, products }: Props) => {
               description="Add products to your store and set them live to accept payments from
           customers."
               title="Add a product"
-              className="flex items-center gap-2 bg-orange px-4 py-2 text-black font-semibold rounded-lg text-sm"
+              className="flex items-center gap-2 bg-primary hover:bg-primary/90 px-4 py-2 text-primary-foreground font-semibold rounded-lg text-sm transition-colors"
               trigger={
                 <>
-                  <Plus
-                    size={20}
-                    className="text-white"
-                  />
-                  <p className="text-white">Add Product</p>
+                  <Plus size={20} />
+                  <p>Add Product</p>
                 </>
               }
             >

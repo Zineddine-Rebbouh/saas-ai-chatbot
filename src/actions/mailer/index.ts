@@ -14,8 +14,8 @@ export const onMailer = (email: string) => {
 
   const mailOptions = {
     to: email,
-    subject: 'Realtime Support',
-    text: 'One of your customers on Corinna, just switched to realtime mode',
+    subject: 'Domainly AI — Live Support Activated',
+    text: 'One of your customers on Domainly AI just switched to real-time support mode. Head to your dashboard to respond.',
   }
 
   transporter.sendMail(mailOptions, function (error, info) {

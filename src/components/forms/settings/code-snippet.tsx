@@ -47,7 +47,7 @@ const CodeSnippet = ({ id }: Props) => {
         label="Code snippet"
         message="Copy and paste this code snippet into the header tag of your website"
       />
-      <div className="bg-cream px-10 rounded-lg inline-block relative">
+      <div className="bg-[hsl(220_27%_98%)] px-10 rounded-lg inline-block relative">
         <Copy
           className="absolute top-5 right-5 text-gray-400 cursor-pointer"
           onClick={() => {

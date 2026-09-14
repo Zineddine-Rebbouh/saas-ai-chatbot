@@ -38,9 +38,9 @@ const Page = async (props: Props) => {
             icon={<PersonIcon />}
           />
           <DashboardCard
-            value={products! * clients! || 0}
+            value={(products ?? 0) * (clients ?? 0)}
             sales
-            title="Pipline Value"
+            title="Pipeline Value"
             icon={<DollarSign />}
           />
           <DashboardCard
@@ -70,29 +70,43 @@ const Page = async (props: Props) => {
               clients={clients || 0}
             />
           </div>
-          <div className="flex flex-col">
-            <div className="w-full flex justify-between items-start mb-5">
+          <div className="flex flex-col bg-card border border-border/60 rounded-2xl p-6 shadow-sm">
+            <div className="w-full flex justify-between items-center mb-6">
               <div className="flex gap-3 items-center">
-                <TransactionsIcon />
-                <p className="font-bold">Recent Transactions</p>
-              </div>
-              <p className="text-sm">See more</p>
-            </div>
-            <Separator orientation="horizontal" />
-            {transactions &&
-              transactions.data.map((transaction) => (
-                <div
-                  className="flex gap-3 w-full justify-between items-center border-b-2 py-5"
-                  key={transaction.id}
-                >
-                  <p className="font-bold">
-                    {transaction.calculated_statement_descriptor}
-                  </p>
-                  <p className="font-bold text-xl">
-                    ${transaction.amount / 100}
-                  </p>
+                <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                  <TransactionsIcon />
                 </div>
-              ))}
+                <p className="font-semibold text-foreground">Recent Transactions</p>
+              </div>
+              <button className="text-xs text-primary hover:underline font-medium">See more</button>
+            </div>
+            
+            <div className="flex flex-col divide-y divide-border/40">
+              {transactions && transactions.data.length > 0 ? (
+                transactions.data.map((transaction) => (
+                  <div
+                    className="flex w-full justify-between items-center py-4 first:pt-0 last:pb-0 hover:bg-secondary/40 transition-colors px-2 rounded-lg"
+                    key={transaction.id}
+                  >
+                    <div className="flex flex-col gap-0.5">
+                      <p className="font-medium text-sm text-foreground">
+                        {transaction.calculated_statement_descriptor || 'Subscription Upgrade'}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground font-mono">
+                        {new Date(transaction.created * 1000).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <p className="font-display font-bold text-base text-foreground">
+                      +${(transaction.amount / 100).toFixed(2)}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-sm text-muted-foreground">
+                  No recent transactions
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

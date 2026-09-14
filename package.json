@@ -1,6 +1,7 @@
 {
-  "name": "corinna-ai",
-  "version": "0.1.0",
+  "name": "domainly-ai",
+  "version": "1.0.0",
+  "description": "Domainly AI — AI-powered email marketing chatbot for businesses. Every conversation becomes a customer.",
   "private": true,
   "scripts": {
     "dev": "next dev",
