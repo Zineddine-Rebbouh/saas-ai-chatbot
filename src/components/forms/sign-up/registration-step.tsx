@@ -1,6 +1,6 @@
 'use client'
 import { useAuthContextHook } from '@/context/use-auth-context'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useFormContext } from 'react-hook-form'
 import TypeSelectionForm from './type-selection-form'
 import dynamic from 'next/dynamic'
@@ -28,7 +28,9 @@ const RegistrationFormStep = (props: Props) => {
   const [onOTP, setOnOTP] = useState<string>('')
   const [onUserType, setOnUserType] = useState<'owner' | 'student'>('owner')
 
-  setValue('otp', onOTP)
+  useEffect(() => {
+    setValue('otp', onOTP)
+  }, [onOTP, setValue])
 
   switch (currentStep) {
     case 1:

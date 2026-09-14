@@ -25,7 +25,10 @@ const Page = async (props: Props) => {
     )
 
   const bookingsExistToday = domainBookings.bookings.filter(
-    (booking) => booking.date.getDate() === today.getDate()
+    (booking) =>
+      booking.date.getDate() === today.getDate() &&
+      booking.date.getMonth() === today.getMonth() &&
+      booking.date.getFullYear() === today.getFullYear()
   )
 
   return (
@@ -55,9 +58,12 @@ const Page = async (props: Props) => {
                       <p className="text-sm">
                         created
                         <br />
-                        {booking.createdAt.getHours()}{' '}
-                        {booking.createdAt.getMinutes()}{' '}
-                        {booking.createdAt.getHours() > 12 ? 'PM' : 'AM'}
+                        {booking.createdAt.getHours() % 12 || 12}:
+                        {booking.createdAt
+                          .getMinutes()
+                          .toString()
+                          .padStart(2, '0')}{' '}
+                        {booking.createdAt.getHours() >= 12 ? 'PM' : 'AM'}
                       </p>
                       <p className="text-sm">
                         Domain <br />
@@ -67,7 +73,9 @@ const Page = async (props: Props) => {
                     <Separator orientation="horizontal" />
                     <div className="w-full flex items-center p-3 gap-2">
                       <Avatar>
-                        <AvatarFallback>{booking.email[0]}</AvatarFallback>
+                        <AvatarFallback>
+                          {booking.email?.[0] ?? '?'}
+                        </AvatarFallback>
                       </Avatar>
                       <p className="text-sm">{booking.email}</p>
                     </div>

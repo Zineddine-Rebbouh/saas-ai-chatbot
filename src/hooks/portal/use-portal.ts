@@ -24,7 +24,9 @@ export const usePortal = (
   const [selectedSlot, setSelectedSlot] = useState<string | undefined>('')
   const [loading, setLoading] = useState<boolean>(false)
 
-  setValue('date', date)
+  useEffect(() => {
+    setValue('date', date)
+  }, [date, setValue])
 
   const onNext = () => setStep((prev) => prev + 1)
 
