@@ -6,6 +6,7 @@ import {
 } from '@/actions/stripe'
 import { useToast } from '@/components/ui/use-toast'
 import axios from 'axios'
+import { getAppUrl } from '@/lib/utils'
 import {
   useElements,
   useStripe as useStripeHook,
@@ -15,44 +16,55 @@ import { useRouter } from 'next/navigation'
 export const useStripe = () => {
   const [onStripeAccountPending, setOnStripeAccountPending] =
     useState<boolean>(false)
+  const { toast } = useToast()
 
   const onStripeConnect = async () => {
     try {
       setOnStripeAccountPending(true)
-      const account = await axios.get(`/api/stripe/connect`)
-      if (account) {
-        setOnStripeAccountPending(false)
-        if (account) {
-          window.location.href = account.data.url
-        }
+      const account = await axios.post(`/api/stripe/connect`)
+      if (account?.data?.url) {
+        window.location.href = account.data.url
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Could not start Stripe onboarding — please try again.',
+        })
       }
     } catch (error) {
       console.log(error)
+      toast({
+        title: 'Error',
+        description: 'Could not start Stripe onboarding — please try again.',
+      })
+    } finally {
+      setOnStripeAccountPending(false)
     }
   }
   return { onStripeConnect, onStripeAccountPending }
 }
 
-export const useStripeCustomer = (amount: number, stripeId: string) => {
+export const useStripeCustomer = (domainId: string) => {
   const [stripeSecret, setStripeSecret] = useState<string>('')
   const [loadForm, setLoadForm] = useState<boolean>(false)
 
-  const onGetCustomerIntent = async (amount: number) => {
+  const onGetCustomerIntent = async (domainId: string) => {
     try {
       setLoadForm(true)
-      const intent = await onCreateCustomerPaymentIntentSecret(amount, stripeId)
-      if (intent) {
-        setLoadForm(false)
-        setStripeSecret(intent.secret!)
+      // Amount + destination account resolve server-side from the domain.
+      const intent = await onCreateCustomerPaymentIntentSecret(domainId)
+      if (intent?.secret) {
+        setStripeSecret(intent.secret)
       }
     } catch (error) {
       console.log(error)
+    } finally {
+      setLoadForm(false)
     }
   }
 
   useEffect(() => {
-    onGetCustomerIntent(amount)
-  }, [])
+    if (domainId) onGetCustomerIntent(domainId)
+  }, [domainId])
 
   return { stripeSecret, loadForm }
 }
@@ -75,7 +87,7 @@ export const useCompleteCustomerPayment = (onNext: () => void) => {
       const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: 'http://localhost:3000/settings',
+          return_url: `${getAppUrl()}/settings`,
         },
         redirect: 'if_required',
       })
@@ -148,14 +160,17 @@ export const useStripeElements = (payment: 'STANDARD' | 'PRO' | 'ULTIMATE') => {
 
   const onGetBillingIntent = async (plans: 'STANDARD' | 'PRO' | 'ULTIMATE') => {
     try {
+      // STANDARD is free — no payment intent to fetch.
+      if (plans === 'STANDARD') return
       setLoadForm(true)
       const intent = await onGetStripeClientSecret(plans)
-      if (intent) {
-        setLoadForm(false)
-        setStripeSecret(intent.secret!)
+      if (intent?.secret) {
+        setStripeSecret(intent.secret)
       }
     } catch (error) {
       console.log(error)
+    } finally {
+      setLoadForm(false)
     }
   }
 
@@ -188,7 +203,7 @@ export const useCompletePayment = (
       const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: 'http://localhost:3000/settings',
+          return_url: `${getAppUrl()}/settings`,
         },
         redirect: 'if_required',
       })
@@ -198,13 +213,27 @@ export const useCompletePayment = (
       }
 
       if (paymentIntent?.status === 'succeeded') {
-        const plan = await onUpdateSubscription(payment)
-        if (plan) {
+        // The server re-reads the intent from Stripe before granting the
+        // plan, so a forged client callback can't upgrade for free.
+        const plan = await onUpdateSubscription(payment, paymentIntent.id)
+        if (plan && plan.status === 200) {
           toast({
             title: 'Success',
             description: plan.message,
           })
+        } else {
+          toast({
+            title: 'Payment failed',
+            description:
+              (plan as { message?: string })?.message ??
+              'Payment could not be verified.',
+          })
         }
+      } else if (paymentIntent) {
+        toast({
+          title: 'Payment not completed',
+          description: `Status: ${paymentIntent.status}`,
+        })
       }
 
       setProcessing(false)

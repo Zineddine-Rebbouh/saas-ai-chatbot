@@ -1,14 +1,20 @@
 'use server'
 
 import { client } from '@/lib/prisma'
-import { currentUser } from '@clerk/nextjs'
+import { requireCampaignOwner, requireUser } from '@/lib/server-auth'
+import { getClerkUserId, getCurrentUser } from '@/lib/current-user'
 import nodemailer from 'nodemailer'
 
-export const onGetAllCustomers = async (id: string) => {
+// Hard cap per send call so one request can't queue an unbounded blast.
+const MAX_BATCH_SIZE = 500
+
+export const onGetAllCustomers = async () => {
   try {
+    const user = await requireUser()
+    if (!user) return null
     const customers = await client.user.findUnique({
       where: {
-        clerkId: id,
+        clerkId: user.clerkId,
       },
       select: {
         subscription: {
@@ -35,17 +41,20 @@ export const onGetAllCustomers = async (id: string) => {
       },
     })
 
-    if (customers) {
-      return customers
-    }
-  } catch (error) {}
+    return customers ?? null
+  } catch (error) {
+    console.log(error)
+    return null
+  }
 }
 
-export const onGetAllCampaigns = async (id: string) => {
+export const onGetAllCampaigns = async () => {
   try {
+    const user = await requireUser()
+    if (!user) return null
     const campaigns = await client.user.findUnique({
       where: {
-        clerkId: id,
+        clerkId: user.clerkId,
       },
       select: {
         campaign: {
@@ -59,27 +68,31 @@ export const onGetAllCampaigns = async (id: string) => {
       },
     })
 
-    if (campaigns) {
-      return campaigns
-    }
+    return campaigns ?? null
   } catch (error) {
     console.log(error)
+    return null
   }
 }
 
 export const onCreateMarketingCampaign = async (name: string) => {
   try {
-    const user = await currentUser()
-    if (!user) return null
+    const clerkId = await getClerkUserId()
+    if (!clerkId) return null
+
+    const trimmed = name?.trim()
+    if (!trimmed || trimmed.length > 120) {
+      return { status: 400, message: 'Campaign name is required' }
+    }
 
     const campaign = await client.user.update({
       where: {
-        clerkId: user.id,
+        clerkId,
       },
       data: {
         campaign: {
           create: {
-            name,
+            name: trimmed,
           },
         },
       },
@@ -88,8 +101,10 @@ export const onCreateMarketingCampaign = async (name: string) => {
     if (campaign) {
       return { status: 200, message: 'You campaign was created' }
     }
+    return { status: 400, message: 'Campaign could not be created' }
   } catch (error) {
     console.log(error)
+    return { status: 400, message: 'Campaign could not be created' }
   }
 }
 
@@ -98,7 +113,21 @@ export const onSaveEmailTemplate = async (
   campainId: string
 ) => {
   try {
-    const newTemplate = await client.campaign.update({
+    const owned = await requireCampaignOwner(campainId)
+    if (!owned) {
+      return { status: 403, message: 'Not authorized for this campaign' }
+    }
+    if (!template || typeof template !== 'string' || template.length > 100_000) {
+      return { status: 400, message: 'Invalid email template' }
+    }
+    // Must be the JSON-encoded string the editor produces; fail here —
+    // not at send time — if it can't round-trip.
+    try {
+      JSON.parse(template)
+    } catch {
+      return { status: 400, message: 'Invalid email template' }
+    }
+    await client.campaign.update({
       where: {
         id: campainId,
       },
@@ -110,6 +139,7 @@ export const onSaveEmailTemplate = async (
     return { status: 200, message: 'Email template created' }
   } catch (error) {
     console.log(error)
+    return { status: 400, message: 'Email template could not be saved' }
   }
 }
 
@@ -118,7 +148,13 @@ export const onAddCustomersToEmail = async (
   id: string
 ) => {
   try {
-    console.log(customers, id)
+    const owned = await requireCampaignOwner(id)
+    if (!owned) {
+      return { status: 403, message: 'Not authorized for this campaign' }
+    }
+    if (!Array.isArray(customers) || customers.length === 0) {
+      return { status: 400, message: 'No customers selected' }
+    }
     const customerAdd = await client.campaign.update({
       where: {
         id,
@@ -131,13 +167,49 @@ export const onAddCustomersToEmail = async (
     if (customerAdd) {
       return { status: 200, message: 'Customer added to campaign' }
     }
-  } catch (error) {}
+    return { status: 400, message: 'Could not update campaign' }
+  } catch (error) {
+    console.log(error)
+    return { status: 400, message: 'Could not update campaign' }
+  }
 }
 
 export const onBulkMailer = async (email: string[], campaignId: string) => {
   try {
-    const user = await currentUser()
-    if (!user) return null
+    const clerkId = await getClerkUserId()
+    if (!clerkId) return null
+
+    const owned = await requireCampaignOwner(campaignId)
+    if (!owned) {
+      return { status: 403, message: 'Not authorized for this campaign' }
+    }
+
+    if (!Array.isArray(email) || email.length === 0) {
+      return { status: 400, message: 'No recipients selected' }
+    }
+    if (email.length > MAX_BATCH_SIZE) {
+      return {
+        status: 400,
+        message: `At most ${MAX_BATCH_SIZE} recipients per send`,
+      }
+    }
+
+    // Recipients must be customers of the sender's own domains —
+    // client-supplied addresses outside the tenant are dropped, not sent.
+    const known = await client.customer.findMany({
+      where: {
+        email: { in: email },
+        Domain: { User: { clerkId } },
+      },
+      select: { email: true },
+    })
+    const allowed = new Set(
+      known.map((c) => c.email).filter((e): e is string => !!e)
+    )
+    const recipients = email.filter((e) => allowed.has(e))
+    if (recipients.length === 0) {
+      return { status: 400, message: 'No valid recipients for your account' }
+    }
 
     //get the template for this campaign
     const template = await client.campaign.findUnique({
@@ -151,6 +223,24 @@ export const onBulkMailer = async (email: string[], campaignId: string) => {
     })
 
     if (template && template.template) {
+      let body: string
+      try {
+        body = JSON.parse(template.template)
+      } catch {
+        return { status: 400, message: 'Email template is invalid' }
+      }
+
+      const subscription = await client.billings.findFirst({
+        where: { User: { clerkId } },
+        select: { credits: true },
+      })
+      if (!subscription || subscription.credits < recipients.length) {
+        return {
+          status: 400,
+          message: 'Not enough email credits for this send',
+        }
+      }
+
       const transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',
         port: 465,
@@ -162,27 +252,22 @@ export const onBulkMailer = async (email: string[], campaignId: string) => {
       })
 
       const mailOptions = {
-        to: email,
+        to: recipients,
         subject: template.name,
-        text: JSON.parse(template.template),
+        text: body,
       }
 
-      transporter.sendMail(mailOptions, function (error, info) {
-        if (error) {
-          console.log(error)
-        } else {
-          console.log('Email sent: ' + info.response)
-        }
-      })
+      // Awaited: credits move only when the mail actually leaves.
+      await transporter.sendMail(mailOptions)
 
       const creditsUsed = await client.user.update({
         where: {
-          clerkId: user.id,
+          clerkId,
         },
         data: {
           subscription: {
             update: {
-              credits: { decrement: email.length },
+              credits: { decrement: recipients.length },
             },
           },
         },
@@ -190,19 +275,22 @@ export const onBulkMailer = async (email: string[], campaignId: string) => {
       if (creditsUsed) {
         return { status: 200, message: 'Campaign emails sent' }
       }
+      return { status: 400, message: 'Emails sent but credits update failed' }
     }
+    return { status: 400, message: 'Campaign has no email template' }
   } catch (error) {
     console.log(error)
+    return { status: 400, message: 'Emails could not be sent' }
   }
 }
 
 export const onGetAllCustomerResponses = async (id: string) => {
   try {
-    const user = await currentUser()
+    const user = await getCurrentUser()
     if (!user) return null
     const answers = await client.user.findUnique({
       where: {
-        clerkId: user.id,
+        clerkId: user.clerkId,
       },
       select: {
         domains: {
@@ -231,14 +319,17 @@ export const onGetAllCustomerResponses = async (id: string) => {
     if (answers) {
       return answers.domains
     }
+    return null
   } catch (error) {
     console.log(error)
+    return null
   }
 }
 
-
 export const onGetEmailTemplate = async (id: string) => {
   try {
+    const owned = await requireCampaignOwner(id)
+    if (!owned) return null
     const template = await client.campaign.findUnique({
       where: {
         id,
@@ -246,12 +337,11 @@ export const onGetEmailTemplate = async (id: string) => {
       select: {
         template: true,
       },
-    });
+    })
 
-    if (template) {
-      return template.template;
-    }
+    return template?.template ?? null
   } catch (error) {
-    console.log(error);
+    console.log(error)
+    return null
   }
-};
+}

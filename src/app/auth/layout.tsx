@@ -1,4 +1,4 @@
-import { currentUser } from '@clerk/nextjs'
+import { getClerkUserId } from '@/lib/current-user'
 import Image from 'next/image'
 import Logo from '@/icons/logo'
 import { redirect } from 'next/navigation'
@@ -9,9 +9,11 @@ type Props = {
 }
 
 const Layout = async ({ children }: Props) => {
-  const user = await currentUser()
+  // `auth()`-based check: the sign-in screen only needs to know whether a
+  // session exists, not the full Clerk profile (no Backend API round trip).
+  const clerkUserId = await getClerkUserId()
 
-  if (user) redirect('/dashboard')
+  if (clerkUserId) redirect('/dashboard')
 
   return (
     <div className="h-screen flex w-full bg-background">

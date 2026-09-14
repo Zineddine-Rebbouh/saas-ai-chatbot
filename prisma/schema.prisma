@@ -42,10 +42,12 @@ model Domain {
   products        Product[]
 
   customer   Customer[]
+  bookings   Bookings[]
   User       User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     String?    @db.Uuid
-  Campaign   Campaign?  @relation(fields: [campaignId], references: [id])
-  campaignId String?    @db.Uuid
+
+  @@unique([userId, name])
+  @@index([userId])
 }
 
 model ChatBot {
@@ -74,6 +76,8 @@ model HelpDesk {
 
   Domain   Domain? @relation(fields: [domainId], references: [id], onDelete: Cascade)
   domainId String? @db.Uuid
+
+  @@index([domainId])
 }
 
 model FilterQuestions {
@@ -83,6 +87,8 @@ model FilterQuestions {
 
   Domain   Domain? @relation(fields: [domainId], references: [id], onDelete: Cascade)
   domainId String? @db.Uuid
+
+  @@index([domainId])
 }
 
 model CustomerResponses {
@@ -91,6 +97,8 @@ model CustomerResponses {
   answered   String?
   customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   customerId String   @db.Uuid
+
+  @@index([customerId])
 }
 
 model Customer {
@@ -103,8 +111,11 @@ model Customer {
 
   booking Bookings[]
 
-  Domain   Domain? @relation(fields: [domainId], references: [id], onDelete: Cascade)
-  domainId String? @db.Uuid
+  Domain    Domain?  @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  domainId  String?  @db.Uuid
+
+  @@unique([domainId, email])
+  @@index([domainId])
 }
 
 model ChatRoom {
@@ -117,6 +128,11 @@ model ChatRoom {
   customerId String?   @db.Uuid
 
   message ChatMessage[]
+
+  @@index([customerId])
+  @@index([createdAt])
+  // Inbox listing orders a customer's rooms by recency (take 1).
+  @@index([customerId, createdAt])
 }
 
 model ChatMessage {
@@ -128,6 +144,11 @@ model ChatMessage {
   ChatRoom   ChatRoom? @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
   chatRoomId String?   @db.Uuid
   seen       Boolean   @default(false)
+
+  @@index([chatRoomId])
+  @@index([createdAt])
+  // Message paging reads the newest/oldest messages of one room in order.
+  @@index([chatRoomId, createdAt])
 }
 
 model Bookings {
@@ -137,19 +158,28 @@ model Bookings {
   email      String
   Customer   Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
   customerId String?   @db.Uuid
+  Domain     Domain?   @relation(fields: [domainId], references: [id], onDelete: Cascade)
   domainId   String?   @db.Uuid
   createdAt  DateTime  @default(now())
+
+  @@unique([domainId, date, slot])
+  @@index([domainId])
+  @@index([customerId])
+  // "Bookings for today" filters by a date range across all of the owner's
+  // domains, which the domainId-prefixed indexes cannot serve.
+  @@index([date])
 }
 
 model Campaign {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name      String
   customers String[]
-  domain    Domain[]
   template  String?
   User      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String?  @db.Uuid
   createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Product {
@@ -158,8 +188,10 @@ model Product {
   price     Int
   image     String
   createdAt DateTime @default(now())
-  Domain    Domain?  @relation(fields: [domainId], references: [id], onDelete: Cascade)
-  domainId  String?  @db.Uuid
+  Domain   Domain? @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  domainId String? @db.Uuid
+
+  @@index([domainId])
 }
 
 enum Plans {

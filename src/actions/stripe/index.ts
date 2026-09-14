@@ -1,7 +1,7 @@
 'use server'
 
 import { client } from '@/lib/prisma'
-import { currentUser } from '@clerk/nextjs'
+import { getClerkUserId } from '@/lib/current-user'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET!, {
@@ -9,18 +9,44 @@ const stripe = new Stripe(process.env.STRIPE_SECRET!, {
   apiVersion: '2024-04-10',
 })
 
+const PLAN_AMOUNTS = {
+  STANDARD: 0,
+  PRO: 1500,
+  ULTIMATE: 3500,
+} as const
+
+type Plan = keyof typeof PLAN_AMOUNTS
+
+const isPlan = (value: unknown): value is Plan =>
+  value === 'STANDARD' || value === 'PRO' || value === 'ULTIMATE'
+
+// Portal checkout is unauthenticated by design, but the charge amount and
+// the destination Connect account both resolve server-side from the domain.
+// Client-supplied amounts/accounts are never trusted.
 export const onCreateCustomerPaymentIntentSecret = async (
-  amount: number,
-  stripeId: string
+  domainId: string
 ) => {
   try {
+    if (!domainId) return null
+    const data = await client.domain.findUnique({
+      where: { id: domainId },
+      select: {
+        products: { select: { price: true } },
+        User: { select: { stripeId: true } },
+      },
+    })
+    const stripeId = data?.User?.stripeId
+    const total = (data?.products ?? []).reduce((sum, p) => sum + p.price, 0)
+    if (!stripeId || total <= 0) return null
+
     const paymentIntent = await stripe.paymentIntents.create(
       {
         currency: 'usd',
-        amount: amount * 100,
+        amount: total * 100,
         automatic_payment_methods: {
           enabled: true,
         },
+        metadata: { domainId },
       },
       { stripeAccount: stripeId }
     )
@@ -28,20 +54,49 @@ export const onCreateCustomerPaymentIntentSecret = async (
     if (paymentIntent) {
       return { secret: paymentIntent.client_secret }
     }
+    return null
   } catch (error) {
     console.log(error)
+    return null
   }
 }
 
 export const onUpdateSubscription = async (
-  plan: 'STANDARD' | 'PRO' | 'ULTIMATE'
+  plan: 'STANDARD' | 'PRO' | 'ULTIMATE',
+  paymentIntentId?: string
 ) => {
   try {
-    const user = await currentUser()
-    if (!user) return
+    if (!isPlan(plan)) return
+    const clerkUserId = await getClerkUserId()
+    if (!clerkUserId) return
+
+    // Paid plans require a verified, succeeded Stripe payment intent owned by
+    // this user for exactly this plan's amount. The browser claiming success
+    // is not sufficient — the intent is re-read from Stripe here.
+    if (plan !== 'STANDARD') {
+      if (!paymentIntentId) {
+        return { status: 402, message: 'Payment is required for this plan' }
+      }
+      let intent: Stripe.PaymentIntent
+      try {
+        intent = await stripe.paymentIntents.retrieve(paymentIntentId)
+      } catch {
+        return { status: 402, message: 'Payment could not be verified' }
+      }
+      if (
+        intent.status !== 'succeeded' ||
+        intent.amount !== PLAN_AMOUNTS[plan] ||
+        intent.currency !== 'usd' ||
+        intent.metadata.plan !== plan ||
+        intent.metadata.clerkId !== clerkUserId
+      ) {
+        return { status: 402, message: 'Payment could not be verified' }
+      }
+    }
+
     const update = await client.user.update({
       where: {
-        clerkId: user.id,
+        clerkId: clerkUserId,
       },
       data: {
         subscription: {
@@ -73,33 +128,31 @@ export const onUpdateSubscription = async (
   }
 }
 
-const setPlanAmount = (item: 'STANDARD' | 'PRO' | 'ULTIMATE') => {
-  if (item == 'PRO') {
-    return 1500
-  }
-  if (item == 'ULTIMATE') {
-    return 3500
-  }
-  return 0
-}
-
 export const onGetStripeClientSecret = async (
   item: 'STANDARD' | 'PRO' | 'ULTIMATE'
 ) => {
   try {
-    const amount = setPlanAmount(item)
+    if (!isPlan(item)) return
+    const clerkUserId = await getClerkUserId()
+    if (!clerkUserId) return
+    // STANDARD is free — there is no $0 intent (Stripe rejects those).
+    const amount = PLAN_AMOUNTS[item]
+    if (amount <= 0) return null
     const paymentIntent = await stripe.paymentIntents.create({
       currency: 'usd',
       amount: amount,
       automatic_payment_methods: {
         enabled: true,
       },
+      metadata: { plan: item, clerkId: clerkUserId },
     })
 
     if (paymentIntent) {
       return { secret: paymentIntent.client_secret }
     }
+    return null
   } catch (error) {
     console.log(error)
+    return null
   }
 }

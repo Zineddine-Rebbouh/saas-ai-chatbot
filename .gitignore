@@ -35,3 +35,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local old snapshot (2024-06-07, commit 4273204) - kept separate, not part of repo
+/old-project/

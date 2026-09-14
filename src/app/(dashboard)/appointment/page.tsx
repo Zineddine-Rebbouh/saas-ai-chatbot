@@ -1,42 +1,46 @@
-import { onGetAllBookingsForCurrentUser } from '@/actions/appointment'
+import {
+  onGetAllBookingsForCurrentUser,
+  onGetTodaysBookings,
+} from '@/actions/appointment'
 import AllAppointments from '@/components/appointment/all-appointments'
 import InfoBar from '@/components/infobar'
 import Section from '@/components/section-label'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { currentUser } from '@clerk/nextjs'
+import { getCurrentUser } from '@/lib/current-user'
 import React from 'react'
 
 type Props = {}
 
 const Page = async (props: Props) => {
-  const user = await currentUser()
-
+  // Request-memoised: shared with the actions below, so this guard costs no
+  // extra Clerk/Prisma round trip.
+  const user = await getCurrentUser()
   if (!user) return null
-  const domainBookings = await onGetAllBookingsForCurrentUser(user.id)
-  const today = new Date()
 
-  if (!domainBookings)
+  // Independent queries run concurrently; "today" is filtered by PostgreSQL.
+  const [allBookings, todaysBookings] = await Promise.all([
+    onGetAllBookingsForCurrentUser(),
+    onGetTodaysBookings(),
+  ])
+
+  const bookings = allBookings.bookings
+  const bookingsExistToday = todaysBookings.bookings
+
+  if (!bookings.length)
     return (
       <div className="w-full flex justify-center">
         <p>No Appointments</p>
       </div>
     )
 
-  const bookingsExistToday = domainBookings.bookings.filter(
-    (booking) =>
-      booking.date.getDate() === today.getDate() &&
-      booking.date.getMonth() === today.getMonth() &&
-      booking.date.getFullYear() === today.getFullYear()
-  )
-
   return (
     <>
       <InfoBar />
       <div className="grid grid-cols-1 lg:grid-cols-3 flex-1 h-0 gap-5">
         <div className="lg:col-span-2 overflow-y-auto">
-          <AllAppointments bookings={domainBookings?.bookings} />
+          <AllAppointments bookings={bookings} />
         </div>
         <div className="col-span-1">
           <Section
@@ -50,7 +54,7 @@ const Page = async (props: Props) => {
                 className="rounded-xl overflow-hidden mt-4"
               >
                 <CardContent className="p-0 flex">
-                  <div className="w-4/12 text-xl bg-primary/10 text-primary py-10 flex justify-center items-center font-bold">
+                  <div className="w-4/12 text-xl bg-peach py-10 flex justify-center items-center font-bold">
                     {booking.slot}
                   </div>
                   <div className="flex flex-col flex-1">
@@ -67,7 +71,7 @@ const Page = async (props: Props) => {
                       </p>
                       <p className="text-sm">
                         Domain <br />
-                        {booking.Customer?.Domain?.name}
+                        {booking.Domain?.name}
                       </p>
                     </div>
                     <Separator orientation="horizontal" />

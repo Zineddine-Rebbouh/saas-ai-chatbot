@@ -27,8 +27,9 @@ const BreadCrumb = (props: Props) => {
             className="p-0 inline"
           >
             <Switch
-              defaultChecked={realtime}
-              onClick={(e) => onActivateRealtime(e)}
+              checked={realtime}
+              onCheckedChange={(checked) => onActivateRealtime(checked)}
+              aria-label="Toggle realtime mode"
               className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-input"
             />
           </Loader>

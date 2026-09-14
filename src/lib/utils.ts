@@ -15,7 +15,9 @@ export const extractUUIDFromString = (url: string) => {
 
 const pusherAppId = process.env.NEXT_PUBLIC_PUSHER_APP_ID
 const pusherAppKey = process.env.NEXT_PUBLIC_PUSHER_APP_KEY
-const pusherAppSecret = process.env.NEXT_PUBLIC_PUSHER_APP_SECRET
+// NOTE: server secret is deliberately NOT NEXT_PUBLIC_ — public vars ship
+// to browsers. Rotate this value since the old public name was compromised.
+const pusherAppSecret = process.env.PUSHER_APP_SECRET
 const pusherAppCluster = process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER
 
 export const isPusherConfigured = Boolean(pusherAppKey && pusherAppCluster)
@@ -46,6 +48,11 @@ export const pusherClient = new PusherClient(pusherAppKey ?? '', {
 export const postToParent = (message: string) => {
   window.parent.postMessage(message, '*')
 }
+
+// Canonical app URL for links generated outside a request context
+// (AI prompts, emails). Falls back to localhost for local dev.
+export const getAppUrl = () =>
+  process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
 
 export const extractURLfromString = (url: string) => {
   return url.match(/https?:\/\/[^\s"<>]+/)

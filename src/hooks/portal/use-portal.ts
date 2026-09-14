@@ -1,6 +1,5 @@
 import {
   onBookNewAppointment,
-  onDomainCustomerResponses,
   saveAnswers,
 } from '@/actions/appointment'
 import { useToast } from '@/components/ui/use-toast'

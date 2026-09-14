@@ -29,10 +29,14 @@ const MaxMenu = ({ current, domains, onExpand, onSignOut }: Props) => {
           height={22}
           className="animate-fade-in opacity-0 delay-300 fill-mode-forwards"
         />
-        <Menu
-          className="cursor-pointer animate-fade-in opacity-0 delay-300 fill-mode-forwards"
+        <button
           onClick={onExpand}
-        />
+          title="Collapse sidebar"
+          aria-label="Collapse sidebar"
+          className="cursor-pointer animate-fade-in opacity-0 delay-300 fill-mode-forwards rounded-lg p-1 hover:bg-secondary"
+        >
+          <Menu />
+        </button>
       </div>
       <div className="animate-fade-in opacity-0 delay-300 fill-mode-forwards flex flex-col justify-between h-full pt-10">
         <div className="flex flex-col">

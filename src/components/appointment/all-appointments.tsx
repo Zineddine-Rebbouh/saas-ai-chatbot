@@ -8,10 +8,8 @@ import { CardDescription } from '../ui/card'
 type Props = {
   bookings:
     | {
-        Customer: {
-          Domain: {
-            name: string
-          } | null
+        Domain: {
+          name: string
         } | null
         id: string
         email: string
@@ -52,7 +50,7 @@ const AllAppointments = ({ bookings }: Props) => {
               </div>
             </TableCell>
             <TableCell className="text-right">
-              {booking.Customer?.Domain?.name}
+              {booking.Domain?.name}
             </TableCell>
           </TableRow>
         ))

@@ -43,7 +43,7 @@ const MenuItem = ({ size, path, icon, label, current, onSignOut }: Props) => {
         <Link
           onClick={onSignOut}
           className={cn(
-            'flex items-center justify-center rounded-xl p-2.5 my-1 transition-all duration-150',
+            'flex flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 my-1 w-full transition-all duration-150',
             isActive
               ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
               : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
@@ -53,6 +53,7 @@ const MenuItem = ({ size, path, icon, label, current, onSignOut }: Props) => {
           aria-label={label}
         >
           <span className={cn('transition-colors', isActive ? 'text-primary-foreground' : 'text-muted-foreground')}>{icon}</span>
+          <span className="text-[10px] font-medium leading-tight text-center w-full break-words">{label}</span>
         </Link>
       )
     default:

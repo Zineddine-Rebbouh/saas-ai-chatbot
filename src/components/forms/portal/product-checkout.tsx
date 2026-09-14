@@ -20,6 +20,7 @@ type Props = {
   amount?: number
   onNext(): void
   stripeId?: string
+  domainid: string
 }
 
 const PaymentCheckout = ({
@@ -28,6 +29,7 @@ const PaymentCheckout = ({
   amount,
   products,
   stripeId,
+  domainid,
 }: Props) => {
   const [stripePromise, setStripePromise] = useState<any>(null)
 
@@ -39,7 +41,7 @@ const PaymentCheckout = ({
     }
   }, [stripeId])
 
-  const { stripeSecret, loadForm } = useStripeCustomer(amount!, stripeId!)
+  const { stripeSecret, loadForm } = useStripeCustomer(domainid)
 
   if (!isStripeConfigured) {
     return (

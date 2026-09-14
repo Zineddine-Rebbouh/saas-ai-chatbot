@@ -27,6 +27,12 @@ type ChatInitialValuesProps = {
   >
   loading: boolean
   setLoading: React.Dispatch<React.SetStateAction<boolean>>
+  /**
+   * True when the loaded conversation window has older messages that were
+   * not fetched yet (messages are paginated, newest page first).
+   */
+  hasOlder: boolean
+  setHasOlder: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 const ChatInitialValues: ChatInitialValuesProps = {
@@ -38,6 +44,8 @@ const ChatInitialValues: ChatInitialValuesProps = {
   setLoading: () => undefined,
   realtime: false,
   setRealtime: () => undefined,
+  hasOlder: false,
+  setHasOlder: () => undefined,
 }
 
 const chatContext = createContext(ChatInitialValues)
@@ -48,6 +56,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(ChatInitialValues.loading)
   const [chatRoom, setChatRoom] = useState(ChatInitialValues.chatRoom)
   const [realtime, setRealtime] = useState(ChatInitialValues.realtime)
+  const [hasOlder, setHasOlder] = useState(ChatInitialValues.hasOlder)
 
   const values = {
     chats,
@@ -58,6 +67,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
     setChatRoom,
     realtime,
     setRealtime,
+    hasOlder,
+    setHasOlder,
   }
 
   return <Provider value={values}>{children}</Provider>

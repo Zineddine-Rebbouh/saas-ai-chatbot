@@ -51,7 +51,6 @@ export const onGetBlogPosts = async () => {
         const imageData = await imageRes.json()
         if (imageData && imageData.media_details) {
           //we push a post object into the array
-          console.log(imageData.media_details)
           const post: {
             id: string
             title: string

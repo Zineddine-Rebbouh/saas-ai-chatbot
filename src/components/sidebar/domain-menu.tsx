@@ -75,7 +75,7 @@ const DomainMenu = ({ domains, min }: Props) => {
               key={domain.id}
               className={cn(
                 'flex gap-3 hover:bg-secondary rounded-xl transition duration-100 ease-in-out cursor-pointer items-center',
-                !min ? 'p-2' : 'py-2 px-2 justify-center',
+                !min ? 'p-2' : 'p-2 flex-col gap-1 justify-center text-center',
                 domain.name.split('.')[0] == isDomain && 'bg-secondary border border-primary/30'
               )}
             >
@@ -92,7 +92,13 @@ const DomainMenu = ({ domains, min }: Props) => {
                   {domain.name.charAt(0).toUpperCase()}
                 </span>
               )}
-              {!min && <p className="text-sm">{domain.name}</p>}
+              {!min ? (
+                <p className="text-sm">{domain.name}</p>
+              ) : (
+                <span className="text-[10px] font-medium leading-tight text-center max-w-[56px] truncate">
+                  {domain.name.split('.')[0]}
+                </span>
+              )}
             </Link>
           ))}
       </div>

@@ -1,14 +1,17 @@
 'use server'
 import { client } from '@/lib/prisma'
-import { clerkClient, currentUser } from '@clerk/nextjs'
+import { requireDomainOwner } from '@/lib/server-auth'
+import { getClerkUserId, getCurrentUser } from '@/lib/current-user'
+import { getSidebarDomains } from '@/lib/domains'
+import { clerkClient } from '@clerk/nextjs/server'
 
 export const onIntegrateDomain = async (domain: string, icon: string) => {
-  const user = await currentUser()
-  if (!user) return
+  const clerkId = await getClerkUserId()
+  if (!clerkId) return
   try {
     const subscription = await client.user.findUnique({
       where: {
-        clerkId: user.id,
+        clerkId,
       },
       select: {
         _count: {
@@ -25,7 +28,7 @@ export const onIntegrateDomain = async (domain: string, icon: string) => {
     })
     const domainExists = await client.user.findFirst({
       where: {
-        clerkId: user.id,
+        clerkId,
         domains: {
           some: {
             name: domain,
@@ -45,7 +48,7 @@ export const onIntegrateDomain = async (domain: string, icon: string) => {
       ) {
         const newDomain = await client.user.update({
           where: {
-            clerkId: user.id,
+            clerkId,
           },
           data: {
             domains: {
@@ -78,16 +81,18 @@ export const onIntegrateDomain = async (domain: string, icon: string) => {
     }
   } catch (error) {
     console.log(error)
+    // P2002 covers the double-submit race once @@unique([userId, name]) lands.
+    return { status: 400, message: 'Domain could not be added' }
   }
 }
 
 export const onGetSubscriptionPlan = async () => {
   try {
-    const user = await currentUser()
+    const user = await getCurrentUser()
     if (!user) return
     const plan = await client.user.findUnique({
       where: {
-        clerkId: user.id,
+        clerkId: user.clerkId,
       },
       select: {
         subscription: {
@@ -105,61 +110,40 @@ export const onGetSubscriptionPlan = async () => {
   }
 }
 
+/**
+ * The user's domains for the sidebar and the domain pickers.
+ *
+ * Returns `id`, `name` and `icon` only — the nested customer/chatRoom graph
+ * the old implementation loaded was never read by any caller. Memoised per
+ * request so the layout, the dashboard page and the conversation page share
+ * one query instead of running it three times per navigation.
+ */
 export const onGetAllAccountDomains = async () => {
-  const user = await currentUser()
-  if (!user) return
-  try {
-    const domains = await client.user.findUnique({
-      where: {
-        clerkId: user.id,
-      },
-      select: {
-        id: true,
-        domains: {
-          select: {
-            name: true,
-            icon: true,
-            id: true,
-            customer: {
-              select: {
-                chatRoom: {
-                  select: {
-                    id: true,
-                    live: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    })
-    return { ...domains }
-  } catch (error) {
-    console.log(error)
-  }
+  return { domains: await getSidebarDomains() }
 }
 export const onUpdatePassword = async (password: string) => {
   try {
-    const user = await currentUser()
+    const clerkId = await getClerkUserId()
 
-    if (!user) return null
-    const update = await clerkClient.users.updateUser(user.id, { password })
+    if (!clerkId) return null
+    const update = await clerkClient.users.updateUser(clerkId, { password })
     if (update) {
       return { status: 200, message: 'Password updated' }
     }
+    return { status: 400, message: 'Password could not be updated' }
   } catch (error) {
     console.log(error)
+    return { status: 400, message: 'Password could not be updated' }
   }
 }
 
 export const onGetCurrentDomainInfo = async (domain: string) => {
-  const user = await currentUser()
+  const user = await getCurrentUser()
   if (!user) return
   try {
     const userDomain = await client.user.findUnique({
       where: {
-        clerkId: user.id,
+        clerkId: user.clerkId,
       },
       select: {
         subscription: {
@@ -200,12 +184,22 @@ export const onGetCurrentDomainInfo = async (domain: string) => {
 
 export const onUpdateDomain = async (id: string, name: string) => {
   try {
-    //check if domain with name exists
+    const owned = await requireDomainOwner(id)
+    if (!owned) {
+      return { status: 403, message: 'Not authorized for this domain' }
+    }
+    const trimmed = name?.trim()
+    if (!trimmed) {
+      return { status: 400, message: 'Domain name is required' }
+    }
+    //check if domain with name exists (within the owner's own domains)
     const domainExists = await client.domain.findFirst({
       where: {
         name: {
-          contains: name,
+          contains: trimmed,
         },
+        NOT: { id },
+        User: { clerkId: owned.clerkId },
       },
     })
 
@@ -215,7 +209,7 @@ export const onUpdateDomain = async (id: string, name: string) => {
           id,
         },
         data: {
-          name,
+          name: trimmed,
         },
       })
 
@@ -238,13 +232,14 @@ export const onUpdateDomain = async (id: string, name: string) => {
     }
   } catch (error) {
     console.log(error)
+    return { status: 400, message: 'Domain could not be updated' }
   }
 }
 
 export const onChatBotImageUpdate = async (id: string, icon: string) => {
-  const user = await currentUser()
+  const owned = await requireDomainOwner(id)
 
-  if (!user) return
+  if (!owned) return { status: 403, message: 'Not authorized for this domain' }
 
   try {
     const domain = await client.domain.update({
@@ -275,6 +270,7 @@ export const onChatBotImageUpdate = async (id: string, icon: string) => {
     }
   } catch (error) {
     console.log(error)
+    return { status: 400, message: 'Chatbot icon could not be updated' }
   }
 }
 
@@ -283,6 +279,13 @@ export const onUpdateWelcomeMessage = async (
   domainId: string
 ) => {
   try {
+    const owned = await requireDomainOwner(domainId)
+    if (!owned) {
+      return { status: 403, message: 'Not authorized for this domain' }
+    }
+    if (!message || typeof message !== 'string' || message.length > 500) {
+      return { status: 400, message: 'Invalid welcome message' }
+    }
     const update = await client.domain.update({
       where: {
         id: domainId,
@@ -301,48 +304,41 @@ export const onUpdateWelcomeMessage = async (
     if (update) {
       return { status: 200, message: 'Welcome message updated' }
     }
+    return { status: 400, message: 'Welcome message could not be updated' }
   } catch (error) {
     console.log(error)
+    return { status: 400, message: 'Welcome message could not be updated' }
   }
 }
 
 export const onDeleteUserDomain = async (id: string) => {
-  const user = await currentUser()
+  // One request-memoised lookup instead of `currentUser()` + `user.findUnique`.
+  const user = await getCurrentUser()
 
   if (!user) return
 
   try {
-    //first verify that domain belongs to user
-    const validUser = await client.user.findUnique({
+    //check that domain belongs to this user and delete
+    const deletedDomain = await client.domain.delete({
       where: {
-        clerkId: user.id,
+        userId: user.id,
+        id,
       },
       select: {
-        id: true,
+        name: true,
       },
     })
 
-    if (validUser) {
-      //check that domain belongs to this user and delete
-      const deletedDomain = await client.domain.delete({
-        where: {
-          userId: validUser.id,
-          id,
-        },
-        select: {
-          name: true,
-        },
-      })
-
-      if (deletedDomain) {
-        return {
-          status: 200,
-          message: `${deletedDomain.name} was deleted successfully`,
-        }
+    if (deletedDomain) {
+      return {
+        status: 200,
+        message: `${deletedDomain.name} was deleted successfully`,
       }
     }
+    return { status: 404, message: 'Domain not found' }
   } catch (error) {
     console.log(error)
+    return { status: 400, message: 'Domain could not be deleted' }
   }
 }
 
@@ -352,6 +348,21 @@ export const onCreateHelpDeskQuestion = async (
   answer: string
 ) => {
   try {
+    const owned = await requireDomainOwner(id)
+    if (!owned) {
+      return {
+        status: 403,
+        message: 'Not authorized for this domain',
+        questions: [],
+      }
+    }
+    if (!question?.trim() || !answer?.trim()) {
+      return {
+        status: 400,
+        message: 'Question and answer are required',
+        questions: [],
+      }
+    }
     const helpDeskQuestion = await client.domain.update({
       where: {
         id,
@@ -389,11 +400,24 @@ export const onCreateHelpDeskQuestion = async (
     }
   } catch (error) {
     console.log(error)
+    return {
+      status: 400,
+      message: 'Help desk question could not be added',
+      questions: [],
+    }
   }
 }
 
 export const onGetAllHelpDeskQuestions = async (id: string) => {
   try {
+    const owned = await requireDomainOwner(id)
+    if (!owned) {
+      return {
+        status: 403,
+        message: 'Not authorized for this domain',
+        questions: [],
+      }
+    }
     const questions = await client.helpDesk.findMany({
       where: {
         domainId: id,
@@ -412,11 +436,27 @@ export const onGetAllHelpDeskQuestions = async (id: string) => {
     }
   } catch (error) {
     console.log(error)
+    return {
+      status: 400,
+      message: 'Could not load help desk questions',
+      questions: [],
+    }
   }
 }
 
 export const onCreateFilterQuestions = async (id: string, question: string) => {
   try {
+    const owned = await requireDomainOwner(id)
+    if (!owned) {
+      return {
+        status: 403,
+        message: 'Not authorized for this domain',
+        questions: [],
+      }
+    }
+    if (!question?.trim()) {
+      return { status: 400, message: 'Question is required', questions: [] }
+    }
     const filterQuestion = await client.domain.update({
       where: {
         id,
@@ -451,11 +491,20 @@ export const onCreateFilterQuestions = async (id: string, question: string) => {
     }
   } catch (error) {
     console.log(error)
+    return {
+      status: 400,
+      message: 'Filter question could not be added',
+      questions: [],
+    }
   }
 }
 
 export const onGetAllFilterQuestions = async (id: string) => {
   try {
+    const owned = await requireDomainOwner(id)
+    if (!owned) {
+      return { status: 403, message: 'Not authorized for this domain', questions: [] }
+    }
     const questions = await client.filterQuestions.findMany({
       where: {
         domainId: id,
@@ -476,16 +525,21 @@ export const onGetAllFilterQuestions = async (id: string) => {
     }
   } catch (error) {
     console.log(error)
+    return {
+      status: 400,
+      message: 'Could not load filter questions',
+      questions: [],
+    }
   }
 }
 
 export const onGetPaymentConnected = async () => {
   try {
-    const user = await currentUser()
+    const user = await getCurrentUser()
     if (user) {
       const connected = await client.user.findUnique({
         where: {
-          clerkId: user.id,
+          clerkId: user.clerkId,
         },
         select: {
           stripeId: true,
@@ -507,6 +561,14 @@ export const onCreateNewDomainProduct = async (
   price: string
 ) => {
   try {
+    const owned = await requireDomainOwner(id)
+    if (!owned) {
+      return { status: 403, message: 'Not authorized for this domain' }
+    }
+    const amount = Number(price)
+    if (!name?.trim() || !image || !Number.isFinite(amount) || amount <= 0) {
+      return { status: 400, message: 'Valid name, image and price are required' }
+    }
     const product = await client.domain.update({
       where: {
         id,
@@ -514,9 +576,9 @@ export const onCreateNewDomainProduct = async (
       data: {
         products: {
           create: {
-            name,
+            name: name.trim(),
             image,
-            price: parseInt(price),
+            price: Math.round(amount),
           },
         },
       },
@@ -528,7 +590,9 @@ export const onCreateNewDomainProduct = async (
         message: 'Product successfully created',
       }
     }
+    return { status: 400, message: 'Product could not be created' }
   } catch (error) {
     console.log(error)
+    return { status: 400, message: 'Product could not be created' }
   }
 }

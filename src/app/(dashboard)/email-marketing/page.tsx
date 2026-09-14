@@ -1,17 +1,20 @@
 import { onGetAllCampaigns, onGetAllCustomers } from '@/actions/mail'
 import EmailMarketing from '@/components/email-marketing'
 import InfoBar from '@/components/infobar'
-import { currentUser } from '@clerk/nextjs'
+import { getCurrentUser } from '@/lib/current-user'
 import React from 'react'
 
 type Props = {}
 
 const Page = async (props: Props) => {
-  const user = await currentUser()
+  const user = await getCurrentUser()
 
   if (!user) return null
-  const customers = await onGetAllCustomers(user.id)
-  const campaigns = await onGetAllCampaigns(user.id)
+  // Independent queries run concurrently instead of back to back.
+  const [customers, campaigns] = await Promise.all([
+    onGetAllCustomers(),
+    onGetAllCampaigns(),
+  ])
 
   return (
     <>

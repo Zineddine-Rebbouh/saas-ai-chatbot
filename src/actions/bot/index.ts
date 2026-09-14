@@ -1,17 +1,18 @@
 'use server'
 
 import { client } from '@/lib/prisma'
-import { extractEmailsFromString, extractURLfromString } from '@/lib/utils'
-import { onRealTimeChat } from '../conversation'
+import { extractEmailsFromString, extractURLfromString, getAppUrl } from '@/lib/utils'
+import { emitRealtime } from '@/lib/realtime'
 import { clerkClient } from '@clerk/nextjs'
 import { onMailer } from '../mailer'
 import OpenAi from 'openai'
 
 const openai = new OpenAi({
-  apiKey: process.env.OPEN_AI_KEY,
+  apiKey: process.env.OPENAI_API_KEY,
 })
 
-export const onStoreConversations = async (
+// Internal helper (not exported — not callable as a server action).
+const storeConversation = async (
   id: string,
   message: string,
   role: 'assistant' | 'user'
@@ -33,6 +34,7 @@ export const onStoreConversations = async (
 
 export const onGetCurrentChatBot = async (id: string) => {
   try {
+    if (!id) return null
     const chatbot = await client.domain.findUnique({
       where: {
         id,
@@ -53,15 +55,12 @@ export const onGetCurrentChatBot = async (id: string) => {
       },
     })
 
-    if (chatbot) {
-      return chatbot
-    }
+    return chatbot ?? null
   } catch (error) {
     console.log(error)
+    return null
   }
 }
-
-let customerEmail: string | undefined
 
 export const onAiChatBotAssistant = async (
   id: string,
@@ -70,12 +69,28 @@ export const onAiChatBotAssistant = async (
   message: string
 ) => {
   try {
+    if (!id || !message || typeof message !== 'string') return
+    const history = Array.isArray(chat) ? chat : []
+
+    // Local to this invocation — never module state (module globals leak
+    // across concurrent requests on the server).
+    const extractedEmail = extractEmailsFromString(message)
+    const customerEmail = extractedEmail?.[0]?.toLowerCase()
+
+    // Single query: domain config + owner + matching customer. Exact,
+    // case-insensitive email match so `a@b.co` never collides with
+    // `a@b.co.evil.com` (the old `startsWith` did).
     const chatBotDomain = await client.domain.findUnique({
       where: {
         id,
       },
       select: {
         name: true,
+        User: {
+          select: {
+            clerkId: true,
+          },
+        },
         filterQuestions: {
           where: {
             answered: null,
@@ -84,30 +99,12 @@ export const onAiChatBotAssistant = async (
             question: true,
           },
         },
-      },
-    })
-    if (chatBotDomain) {
-      const extractedEmail = extractEmailsFromString(message)
-      if (extractedEmail) {
-        customerEmail = extractedEmail[0]
-      }
-
-      if (customerEmail) {
-        const checkCustomer = await client.domain.findUnique({
-          where: {
-            id,
-          },
-          select: {
-            User: {
-              select: {
-                clerkId: true,
-              },
-            },
-            name: true,
-            customer: {
+        customer: customerEmail
+          ? {
               where: {
                 email: {
-                  startsWith: customerEmail,
+                  equals: customerEmail,
+                  mode: 'insensitive',
                 },
               },
               select: {
@@ -122,10 +119,28 @@ export const onAiChatBotAssistant = async (
                   },
                 },
               },
+            }
+          : {
+              take: 0,
+              select: {
+                id: true,
+                email: true,
+                questions: true,
+                chatRoom: {
+                  select: {
+                    id: true,
+                    live: true,
+                    mailed: true,
+                  },
+                },
+              },
             },
-          },
-        })
-        if (checkCustomer && !checkCustomer.customer.length) {
+      },
+    })
+    if (chatBotDomain) {
+      if (customerEmail) {
+        const existing = chatBotDomain.customer[0]
+        if (!existing) {
           const newCustomer = await client.domain.update({
             where: {
               id,
@@ -145,7 +160,6 @@ export const onAiChatBotAssistant = async (
             },
           })
           if (newCustomer) {
-            console.log('new customer made')
             const response = {
               role: 'assistant',
               content: `Welcome aboard ${
@@ -154,32 +168,37 @@ export const onAiChatBotAssistant = async (
             }
             return { response }
           }
+          return
         }
-        if (checkCustomer && checkCustomer.customer[0].chatRoom[0].live) {
-          await onStoreConversations(
-            checkCustomer?.customer[0].chatRoom[0].id!,
-            message,
-            author
-          )
-          
-          onRealTimeChat(
-            checkCustomer.customer[0].chatRoom[0].id,
-            message,
-            'user',
-            author
-          )
+        let room = existing.chatRoom[0]
+        if (!room) {
+          // Self-repair: customer without a room (shouldn't happen).
+          const repaired = await client.customer.update({
+            where: { id: existing.id },
+            data: { chatRoom: { create: {} } },
+            select: {
+              chatRoom: { select: { id: true, live: true, mailed: true } },
+            },
+          })
+          room = repaired.chatRoom[0]
+          if (!room) return
+        }
+        if (room.live) {
+          await storeConversation(room.id, message, author)
 
-          if (!checkCustomer.customer[0].chatRoom[0].mailed) {
+          await emitRealtime(room.id, message, 'user', author)
+
+          if (!room.mailed) {
             const user = await clerkClient.users.getUser(
-              checkCustomer.User?.clerkId!
+              chatBotDomain.User?.clerkId!
             )
 
-            onMailer(user.emailAddresses[0].emailAddress)
+            await onMailer(user.emailAddresses[0].emailAddress)
 
             //update mail status to prevent spamming
             const mailed = await client.chatRoom.update({
               where: {
-                id: checkCustomer.customer[0].chatRoom[0].id,
+                id: room.id,
               },
               data: {
                 mailed: true,
@@ -189,22 +208,19 @@ export const onAiChatBotAssistant = async (
             if (mailed) {
               return {
                 live: true,
-                chatRoom: checkCustomer.customer[0].chatRoom[0].id,
+                chatRoom: room.id,
               }
             }
           }
           return {
             live: true,
-            chatRoom: checkCustomer.customer[0].chatRoom[0].id,
+            chatRoom: room.id,
           }
         }
 
-        await onStoreConversations(
-          checkCustomer?.customer[0].chatRoom[0].id!,
-          message,
-          author
-        )
+        await storeConversation(room.id, message, author)
 
+        const appUrl = getAppUrl()
         const chatCompletion = await openai.chat.completions.create({
           messages: [
             {
@@ -228,16 +244,12 @@ export const onAiChatBotAssistant = async (
 
               if the customer says something out of context or inapporpriate. Simply say this is beyond you and you will get a real user to continue the conversation. And add a keyword (realtime) at the end.
 
-              if the customer agrees to book an appointment send them this link http://localhost:3000/portal/${id}/appointment/${
-                checkCustomer?.customer[0].id
-              }
+              if the customer agrees to book an appointment send them this link ${appUrl}/portal/${id}/appointment/${existing.id}
 
-              if the customer wants to buy a product redirect them to the payment page http://localhost:3000/portal/${id}/payment/${
-                checkCustomer?.customer[0].id
-              }
+              if the customer wants to buy a product redirect them to the payment page ${appUrl}/portal/${id}/payment/${existing.id}
           `,
             },
-            ...chat,
+            ...history,
             {
               role: 'user',
               content: message,
@@ -249,7 +261,7 @@ export const onAiChatBotAssistant = async (
         if (chatCompletion.choices[0].message.content?.includes('(realtime)')) {
           const realtime = await client.chatRoom.update({
             where: {
-              id: checkCustomer?.customer[0].chatRoom[0].id,
+              id: room.id,
             },
             data: {
               live: true,
@@ -265,20 +277,19 @@ export const onAiChatBotAssistant = async (
               ),
             }
 
-            await onStoreConversations(
-              checkCustomer?.customer[0].chatRoom[0].id!,
-              response.content,
-              'assistant'
-            )
+            await storeConversation(room.id, response.content, 'assistant')
 
             return { response }
           }
         }
-        if (chat[chat.length - 1].content.includes('(complete)')) {
+        if (
+          history.length > 0 &&
+          history[history.length - 1]?.content.includes('(complete)')
+        ) {
           const firstUnansweredQuestion =
             await client.customerResponses.findFirst({
               where: {
-                customerId: checkCustomer?.customer[0].id,
+                customerId: existing.id,
                 answered: null,
               },
               select: {
@@ -313,8 +324,8 @@ export const onAiChatBotAssistant = async (
               link: link.slice(0, -1),
             }
 
-            await onStoreConversations(
-              checkCustomer?.customer[0].chatRoom[0].id!,
+            await storeConversation(
+              room.id,
               `${response.content} ${response.link}`,
               'assistant'
             )
@@ -327,16 +338,11 @@ export const onAiChatBotAssistant = async (
             content: chatCompletion.choices[0].message.content,
           }
 
-          await onStoreConversations(
-            checkCustomer?.customer[0].chatRoom[0].id!,
-            `${response.content}`,
-            'assistant'
-          )
+          await storeConversation(room.id, `${response.content}`, 'assistant')
 
           return { response }
         }
       }
-      console.log('No customer')
       const chatCompletion = await openai.chat.completions.create({
         messages: [
           {
@@ -349,7 +355,7 @@ export const onAiChatBotAssistant = async (
 
           `,
           },
-          ...chat,
+          ...history,
           {
             role: 'user',
             content: message,

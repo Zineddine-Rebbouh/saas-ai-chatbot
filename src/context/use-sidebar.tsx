@@ -8,7 +8,7 @@ import { onGetConversationMode, onToggleRealtime } from '@/actions/conversation'
 import { useClerk } from '@clerk/nextjs'
 
 const useSideBar = () => {
-  const [expand, setExpand] = useState<boolean | undefined>(undefined)
+  const [expand, setExpand] = useState<boolean>(false)
   const router = useRouter()
   const pathname = usePathname()
   const { toast } = useToast()
@@ -17,17 +17,20 @@ const useSideBar = () => {
 
   const { chatRoom } = useChatContext()
 
-  const onActivateRealtime = async (e: any) => {
+  const onActivateRealtime = async (next: boolean) => {
     try {
-      const realtime = await onToggleRealtime(
-        chatRoom!,
-        e.target.ariaChecked == 'true' ? false : true
-      )
-      if (realtime) {
+      if (!chatRoom) return
+      const realtime = await onToggleRealtime(chatRoom, next)
+      if (realtime && 'chatRoom' in realtime && realtime.chatRoom) {
         setRealtime(realtime.chatRoom.live)
         toast({
           title: 'Success',
           description: realtime.message,
+        })
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Could not update realtime mode.',
         })
       }
     } catch (error) {

@@ -24,6 +24,7 @@ const config = {
         sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
       },
       colors: {
+        peach: '#FFE0BD',
         /* ─── Brand Tokens ─── */
         ember: {
           DEFAULT: 'hsl(14 78% 57%)',

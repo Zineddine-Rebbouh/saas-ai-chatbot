@@ -76,6 +76,7 @@ const PortalForm = ({
         onBooking={setDate}
         step={step}
         type={type}
+        domainid={domainid}
         questions={questions}
         error={errors}
         register={register}

@@ -14,7 +14,11 @@ const Messenger = (props: Props) => {
     messageWindowRef,
     chats,
     loading,
+    sending,
     chatRoom,
+    hasOlder,
+    loadingOlder,
+    onLoadOlderMessages,
     onHandleSentMessage,
     register,
   } = useChatWindow()
@@ -26,6 +30,18 @@ const Messenger = (props: Props) => {
             ref={messageWindowRef}
             className="w-full flex-1 h-0 flex flex-col gap-3 pl-5 py-5 chat-window overflow-y-auto"
           >
+            {hasOlder && (
+              <div className="w-full flex justify-center">
+                <button
+                  type="button"
+                  onClick={onLoadOlderMessages}
+                  disabled={loadingOlder}
+                  className="text-xs text-muted-foreground hover:text-foreground border border-border/60 hover:border-primary/40 rounded-full px-3 py-1 transition-colors disabled:opacity-50 disabled:pointer-events-none"
+                >
+                  {loadingOlder ? 'Loading…' : 'Load earlier messages'}
+                </button>
+              </div>
+            )}
             {chats.length ? (
               chats.map((chat) => (
                 <Bubble
@@ -69,7 +85,7 @@ const Messenger = (props: Props) => {
           <Button
             type="submit"
             className="px-5 py-2.5 bg-primary hover:bg-primary/95 text-primary-foreground text-sm font-semibold rounded-xl transition-all duration-150 hover:-translate-y-px active:translate-y-0 disabled:opacity-50 disabled:pointer-events-none"
-            disabled={!chatRoom}
+            disabled={!chatRoom || sending}
           >
             Send
           </Button>

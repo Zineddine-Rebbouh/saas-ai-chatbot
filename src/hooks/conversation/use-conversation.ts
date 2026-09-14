@@ -3,7 +3,6 @@ import {
   onGetChatMessages,
   onGetDomainChatRooms,
   onOwnerSendMessage,
-  onRealTimeChat,
   onViewUnReadMessages,
 } from '@/actions/conversation'
 import { useChatContext } from '@/context/user-chat-context'
@@ -22,7 +21,12 @@ export const useConversation = () => {
     resolver: zodResolver(ConversationSearchSchema),
     mode: 'onChange',
   })
-  const { setLoading: loadMessages, setChats, setChatRoom } = useChatContext()
+  const {
+    setLoading: loadMessages,
+    setChats,
+    setChatRoom,
+    setHasOlder,
+  } = useChatContext()
   const [chatRooms, setChatRooms] = useState<
     {
       chatRoom: {
@@ -62,10 +66,13 @@ export const useConversation = () => {
   const onGetActiveChatMessages = async (id: string) => {
     try {
       loadMessages(true)
-      const messages = await onGetChatMessages(id)
-      if (messages) {
+      // Only the newest page of history is fetched; `hasOlder` tells the
+      // messenger whether a "load earlier messages" control should appear.
+      const page = await onGetChatMessages(id)
+      if (page.messages.length > 0) {
         setChatRoom(id)
-        setChats(messages[0].message)
+        setChats(page.messages)
+        setHasOlder(page.hasMore)
       }
     } catch (error) {
       toast({
@@ -129,8 +136,14 @@ export const useChatTime = (createdAt: Date, roomId: string) => {
 
 export const useChatWindow = () => {
   const { toast } = useToast()
-  const { chats, loading, setChats, chatRoom } = useChatContext()
+  const { chats, loading, setChats, chatRoom, hasOlder, setHasOlder } =
+    useChatContext()
+  const [sending, setSending] = useState<boolean>(false)
+  const [loadingOlder, setLoadingOlder] = useState<boolean>(false)
   const messageWindowRef = useRef<HTMLDivElement | null>(null)
+  // Set just before prepending older history so the scroll effect below does
+  // not jump the conversation back to the newest message.
+  const skipAutoScrollRef = useRef<boolean>(false)
   const { register, handleSubmit, reset } = useForm({
     resolver: zodResolver(ChatBotMessageSchema),
     mode: 'onChange',
@@ -144,8 +157,39 @@ export const useChatWindow = () => {
   }
 
   useEffect(() => {
+    if (skipAutoScrollRef.current) {
+      skipAutoScrollRef.current = false
+      return
+    }
     onScrollToBottom()
   }, [chats, messageWindowRef])
+
+  /**
+   * Pages backwards through history using the oldest message currently
+   * rendered as the cursor.
+   */
+  const onLoadOlderMessages = async () => {
+    if (!chatRoom || !hasOlder || loadingOlder) return
+    const oldestMessageId = chats[0]?.id
+    if (!oldestMessageId) return
+
+    setLoadingOlder(true)
+    try {
+      const page = await onGetChatMessages(chatRoom, oldestMessageId)
+      if (page.messages.length > 0) {
+        skipAutoScrollRef.current = true
+        setChats((prev) => [...page.messages, ...prev])
+      }
+      setHasOlder(page.hasMore)
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Could not load earlier messages — please try again.',
+      })
+    } finally {
+      setLoadingOlder(false)
+    }
+  }
 
   useEffect(() => {
     if (chatRoom && isPusherConfigured) {
@@ -163,29 +207,37 @@ export const useChatWindow = () => {
 
   const onHandleSentMessage = handleSubmit(async (values) => {
     try {
-      reset()
-      const message = await onOwnerSendMessage(
-        chatRoom!,
+      if (!chatRoom || sending) return
+      setSending(true)
+      // The server persists the message AND emits realtime in one action,
+      // so there is no separate emit call here (it would double-deliver).
+      const result = await onOwnerSendMessage(
+        chatRoom,
         values.content,
         'assistant'
       )
-      //WIP: Remove this line
-      if (message) {
-        //remove this
-        // setChats((prev) => [...prev, message.message[0]])
-
-        await onRealTimeChat(
-          chatRoom!,
-          message.message[0].message,
-          message.message[0].id,
-          'assistant'
-        )
+      if (
+        result &&
+        'message' in result &&
+        Array.isArray(result.message) &&
+        result.message[0]
+      ) {
+        reset()
+      } else {
+        toast({
+          title: 'Error',
+          description:
+            (result as { message?: string })?.message ??
+            'Message could not be sent — please try again.',
+        })
       }
     } catch (error) {
       toast({
         title: 'Error',
         description: 'Message could not be sent — please try again.',
       })
+    } finally {
+      setSending(false)
     }
   })
 
@@ -195,6 +247,10 @@ export const useChatWindow = () => {
     onHandleSentMessage,
     chats,
     loading,
+    sending,
     chatRoom,
+    hasOlder,
+    loadingOlder,
+    onLoadOlderMessages,
   }
 }

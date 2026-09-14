@@ -28,8 +28,17 @@ export const MinMenu = ({
   domains,
 }: MinMenuProps) => {
   return (
-    <div className="p-3 flex flex-col items-center h-full">
-      <span className="animate-fade-in opacity-0 delay-300 fill-mode-forwards cursor-pointer">
+    <div className="p-2 flex flex-col items-center h-full">
+      <span
+        role="button"
+        tabIndex={0}
+        title="Expand sidebar"
+        aria-label="Expand sidebar"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') onShrink()
+        }}
+        className="animate-fade-in opacity-0 delay-300 fill-mode-forwards cursor-pointer rounded-lg focus-visible:outline-none"
+      >
         <MenuLogo onClick={onShrink} />
       </span>
       <div className="animate-fade-in opacity-0 delay-300 fill-mode-forwards flex flex-col justify-between h-full pt-10">

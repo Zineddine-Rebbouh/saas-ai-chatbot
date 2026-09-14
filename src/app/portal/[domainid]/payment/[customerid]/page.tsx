@@ -11,7 +11,10 @@ const CustomerPaymentPage = async ({
 }: {
   params: { domainid: string; customerid: string }
 }) => {
-  const questions = await onDomainCustomerResponses(params.customerid)
+  const questions = await onDomainCustomerResponses(
+    params.customerid,
+    params.domainid
+  )
   const products = await onGetDomainProductsAndConnectedAccountId(
     params.domainid
   )
