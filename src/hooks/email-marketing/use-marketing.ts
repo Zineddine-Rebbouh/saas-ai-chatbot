@@ -23,6 +23,7 @@ export const useEmailMarketing = () => {
   const [processing, setProcessing] = useState<boolean>(false)
   const [isId, setIsId] = useState<string | undefined>(undefined)
   const [editing, setEditing] = useState<boolean>(false)
+  const [sendingId, setSendingId] = useState<string | undefined>(undefined)
 
   const {
     register,
@@ -82,20 +83,30 @@ export const useEmailMarketing = () => {
   const onSelectCampaign = (id: string) => setCampaignId(id)
 
   const onAddCustomersToCampaign = async () => {
+    if (!campaignId) {
+      toast({
+        title: 'Error',
+        description: 'Select a campaign before adding customers.',
+      })
+      return
+    }
+    if (processing) return
+
     try {
       setProcessing(true)
-      const customersAdd = await onAddCustomersToEmail(isSelected, campaignId!)
+      const customersAdd = await onAddCustomersToEmail(isSelected, campaignId)
       if (customersAdd) {
         toast({
           title: 'Success',
           description: customersAdd.message,
         })
-        setProcessing(false)
         setCampaignId(undefined)
         router.refresh()
       }
     } catch (error) {
       console.log(error)
+    } finally {
+      setProcessing(false)
     }
   }
 
@@ -110,7 +121,10 @@ export const useEmailMarketing = () => {
   }
 
   const onBulkEmail = async (emails: string[], campaignId: string) => {
+    if (sendingId) return
+
     try {
+      setSendingId(campaignId)
       const mails = await onBulkMailer(emails, campaignId)
       if (mails) {
         toast({
@@ -121,6 +135,8 @@ export const useEmailMarketing = () => {
       }
     } catch (error) {
       console.log(error)
+    } finally {
+      setSendingId(undefined)
     }
   }
 
@@ -138,6 +154,7 @@ export const useEmailMarketing = () => {
     campaignId,
     onAddCustomersToCampaign,
     onBulkEmail,
+    sendingId,
     onSetAnswersId,
     isId,
     registerEmail,

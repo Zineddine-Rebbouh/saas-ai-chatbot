@@ -10,6 +10,17 @@ import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Loader } from '@/components/loader'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 
 const WelcomeMessage = dynamic(
   () => import('./greetings-message').then((props) => props.default),
@@ -87,14 +98,38 @@ const SettingsForm = ({ id, name, chatBot, plan }: Props) => {
         </div>
       </div>
       <div className="flex gap-5 justify-end">
-        <Button
-          onClick={onDeleteDomain}
-          variant="destructive"
-          type="button"
-          className="px-10 h-[50px]"
-        >
-          <Loader loading={deleting}>Delete Domain</Loader>
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="destructive"
+              type="button"
+              className="px-10 h-[50px]"
+            >
+              <Loader loading={deleting}>Delete Domain</Loader>
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete this domain?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This permanently removes the domain and its chatbot settings.
+                This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction asChild>
+                <Button
+                  variant="destructive"
+                  disabled={deleting}
+                  onClick={onDeleteDomain}
+                >
+                  <Loader loading={deleting}>Delete</Loader>
+                </Button>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         <Button
           type="submit"
           className="w-[100px] h-[50px]"

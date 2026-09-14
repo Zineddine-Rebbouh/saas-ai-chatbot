@@ -18,6 +18,7 @@ type Props = {
   lines?: number
   form?: string
   defaultValue?: string
+  autoComplete?: string
 }
 
 const FormGenerator = ({
@@ -32,6 +33,7 @@ const FormGenerator = ({
   label,
   lines,
   options,
+  autoComplete,
 }: Props) => {
   switch (inputType) {
     case 'input':
@@ -48,6 +50,7 @@ const FormGenerator = ({
             placeholder={placeholder}
             form={form}
             defaultValue={defaultValue}
+            autoComplete={autoComplete}
             {...register(name)}
           />
           <ErrorMessage
@@ -102,6 +105,7 @@ const FormGenerator = ({
             form={form}
             id={`input-${label}`}
             placeholder={placeholder}
+            autoComplete={autoComplete}
             {...register(name)}
             rows={lines}
             defaultValue={defaultValue}

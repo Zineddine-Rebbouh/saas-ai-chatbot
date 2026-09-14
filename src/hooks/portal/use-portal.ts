@@ -31,6 +31,8 @@ export const usePortal = (
   const onPrev = () => setStep((prev) => prev - 1)
 
   const onBookAppointment = handleSubmit(async (values) => {
+    if (loading) return
+
     try {
       setLoading(true)
       const questions = Object.keys(values)
@@ -56,11 +58,21 @@ export const usePortal = (
             description: booked.message,
           })
           setStep(3)
+        } else {
+          toast({
+            title: 'Error',
+            description: booked?.message ?? 'Booking failed — please try again.',
+          })
         }
-
-        setLoading(false)
       }
-    } catch (error) {}
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Booking failed — please try again.',
+      })
+    } finally {
+      setLoading(false)
+    }
   })
 
   const onSelectedTimeSlot = (slot: string) => setSelectedSlot(slot)

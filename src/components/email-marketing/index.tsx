@@ -48,6 +48,7 @@ const EmailMarketing = ({ campaign, domains, subscription }: Props) => {
     onAddCustomersToCampaign,
     campaignId,
     onBulkEmail,
+    sendingId,
     onSetAnswersId,
     isId,
     registerEmail,
@@ -68,7 +69,7 @@ const EmailMarketing = ({ campaign, domains, subscription }: Props) => {
       <div>
         <div className="flex gap-3 justify-end">
           <Button
-            disabled={isSelected.length == 0}
+            disabled={isSelected.length == 0 || processing}
             onClick={onAddCustomersToCampaign}
           >
             <Plus /> Add to campaign
@@ -113,7 +114,7 @@ const EmailMarketing = ({ campaign, domains, subscription }: Props) => {
         </div>
         <div className="flex flex-col items-end mt-5 gap-3">
           {campaign &&
-            campaign.map((camp, i) => (
+            campaign.map((camp) => (
               <Card
                 key={camp.id}
                 className={cn(
@@ -162,14 +163,10 @@ const EmailMarketing = ({ campaign, domains, subscription }: Props) => {
                         <Button
                           variant="default"
                           className="rounded-lg"
-                          onClick={() =>
-                            onBulkEmail(
-                              campaign[i].customers.map((c) => c),
-                              camp.id
-                            )
-                          }
+                          disabled={sendingId === camp.id}
+                          onClick={() => onBulkEmail(camp.customers, camp.id)}
                         >
-                          Send
+                          <Loader loading={sendingId === camp.id}>Send</Loader>
                         </Button>
                       </div>
                     </div>

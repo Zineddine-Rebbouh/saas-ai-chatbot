@@ -19,7 +19,7 @@ type Props = {
   loading: boolean
   bookings:
     | {
-        date: Date
+        date: Date | string
         slot: string
       }[]
     | undefined
@@ -35,6 +35,21 @@ const BookAppointmentDate = ({
   loading,
   bookings,
 }: Props) => {
+  // booking.date arrives as an ISO string after server-action serialization —
+  // normalize before comparing so `.getDate()` never throws.
+  const isBooked = (slotValue: string) =>
+    bookings?.some((booking) => {
+      const bookingDate = new Date(booking.date)
+      const selectedDate = date ? new Date(date) : undefined
+      return (
+        !isNaN(bookingDate.getTime()) &&
+        selectedDate !== undefined &&
+        !isNaN(selectedDate.getTime()) &&
+        bookingDate.getDate() === selectedDate.getDate() &&
+        bookingDate.getMonth() === selectedDate.getMonth() &&
+        booking.slot === slotValue
+      )
+    }) ?? false
   return (
     <div className="flex flex-col gap-5 justify-center">
       <div className="flex justify-center">
@@ -58,49 +73,38 @@ const BookAppointmentDate = ({
           />
         </div>
         <div className="flex flex-col gap-5">
-          {APPOINTMENT_TIME_SLOTS.map((slot, key) => (
-            <Label
-              htmlFor={`slot-${key}`}
-              key={key}
-            >
-              <Card
-                onClick={() => onSlot(slot.slot)}
-                className={cn(
-                  currentSlot == slot.slot ? 'bg-primary text-primary-foreground' : 'bg-primary/10',
-                  'px-10 py-4',
-                  bookings &&
-                    bookings.some(
-                      (booking) =>
-                        `${booking.date.getDate()}/${booking.date.getMonth()}` ===
-                          `${date?.getDate()}/${date?.getMonth()}` &&
-                        booking.slot == slot.slot
-                    )
-                    ? 'bg-gray-300'
-                    : 'cursor-pointer border-primary hover:bg-primary/20 transition duration-150 ease-in-out'
-                )}
+          {APPOINTMENT_TIME_SLOTS.map((slot, key) => {
+            const booked = isBooked(slot.slot)
+            return (
+              <Label
+                htmlFor={`slot-${key}`}
+                key={`${slot.slot}-${key}`}
               >
-                <Input
-                  {...(bookings &&
-                  bookings.some(
-                    (booking) =>
-                      booking.date == date && booking.slot == slot.slot
-                  )
-                    ? {
-                        disabled: true,
-                      }
-                    : {
-                        disabled: false,
-                      })}
-                  className="hidden"
-                  type="radio"
-                  value={slot.slot}
-                  {...register('slot')}
-                  id={`slot-${key}`}
-                />
-                {slot.slot}
-              </Card>
-            </Label>
-          ))}
+                <Card
+                  onClick={() => !booked && onSlot(slot.slot)}
+                  className={cn(
+                    currentSlot == slot.slot
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-primary/10',
+                    'px-10 py-4',
+                    booked
+                      ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                      : 'cursor-pointer border-primary hover:bg-primary/20 transition duration-150 ease-in-out'
+                  )}
+                >
+                  <Input
+                    disabled={booked}
+                    className="hidden"
+                    type="radio"
+                    value={slot.slot}
+                    {...register('slot')}
+                    id={`slot-${key}`}
+                  />
+                  {slot.slot}
+                </Card>
+              </Label>
+            )
+          })}
         </div>
       </div>
       <div className="flex gap-5 justify-center mt-5">
@@ -111,7 +115,7 @@ const BookAppointmentDate = ({
         >
           Edit Questions?
         </Button>
-        <Button>
+        <Button disabled={!currentSlot || loading}>
           <Loader loading={loading}>Book Now</Loader>
         </Button>
       </div>

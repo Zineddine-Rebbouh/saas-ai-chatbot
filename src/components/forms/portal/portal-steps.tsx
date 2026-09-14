@@ -23,7 +23,7 @@ type Props = {
   loading: boolean
   bookings?:
     | {
-        date: Date
+        date: Date | string
         slot: string
       }[]
     | undefined
