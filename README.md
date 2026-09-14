@@ -1,6 +1,6 @@
 <div align="center">
 
-# Corinna AI — SaaS AI Chatbot Platform
+# Domainly AI — SaaS AI Chatbot Platform
 
 A multi-tenant SaaS platform that lets businesses spin up an AI-powered sales & support chatbot for their website, complete with lead capture, live handoff, appointment booking, checkout, and email marketing.
 
@@ -19,7 +19,7 @@ A multi-tenant SaaS platform that lets businesses spin up an AI-powered sales & 
 
 ## Overview
 
-**Corinna AI** is a Next.js 14 SaaS application that gives businesses an embeddable AI chatbot for their domain. Each customer ("user") can register one or more **domains**, customize a chatbot for each, and let the bot:
+**Domainly AI** is a Next.js 14 SaaS application that gives businesses an embeddable AI chatbot for their domain. Each customer ("user") can register one or more **domains**, customize a chatbot for each, and let the bot:
 
 * Greet visitors and capture their email
 * Ask a configurable list of qualifying questions
