@@ -1,5 +1,5 @@
 'use client'
-import React from 'react'
+import React, { useEffect } from 'react'
 
 import { Button } from '../ui/button'
 import { Loader } from '../loader'
@@ -28,7 +28,9 @@ export const EditEmail = ({
   setDefault,
 }: EditEmailProps) => {
   const { loading, template } = useEditEmail(id)
-  setDefault('description', template ? JSON.parse(template) : '')
+  useEffect(() => {
+    setDefault('description', template ? JSON.parse(template) : '')
+  }, [template, setDefault])
   return (
     <form
       onSubmit={onCreate}

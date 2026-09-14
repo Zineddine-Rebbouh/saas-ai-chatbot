@@ -63,11 +63,15 @@ export const useChangePassword = () => {
       const updated = await onUpdatePassword(values.password)
       if (updated) {
         reset()
-        setLoading(false)
         toast({ title: 'Success', description: updated.message })
       }
     } catch (error) {
-      console.log(error)
+      toast({
+        title: 'Error',
+        description: 'Password could not be changed — please try again.',
+      })
+    } finally {
+      setLoading(false)
     }
   })
   return {
@@ -93,51 +97,68 @@ export const useSettings = (id: string) => {
   const [deleting, setDeleting] = useState<boolean>(false)
 
   const onUpdateSettings = handleSubmit(async (values) => {
-    setLoading(true)
-    if (values.domain) {
-      const domain = await onUpdateDomain(id, values.domain)
-      if (domain) {
-        toast({
-          title: 'Success',
-          description: domain.message,
-        })
+    try {
+      setLoading(true)
+      if (values.domain) {
+        const domain = await onUpdateDomain(id, values.domain)
+        if (domain) {
+          toast({
+            title: 'Success',
+            description: domain.message,
+          })
+        }
       }
-    }
-    if (values.image[0]) {
-      const uploaded = await upload.uploadFile(values.image[0])
-      const image = await onChatBotImageUpdate(id, uploaded.uuid)
-      if (image) {
-        toast({
-          title: image.status == 200 ? 'Success' : 'Error',
-          description: image.message,
-        })
-        setLoading(false)
+      if (values.image?.[0]) {
+        const uploaded = await upload.uploadFile(values.image[0])
+        const image = await onChatBotImageUpdate(id, uploaded.uuid)
+        if (image) {
+          toast({
+            title: image.status == 200 ? 'Success' : 'Error',
+            description: image.message,
+          })
+        }
       }
-    }
-    if (values.welcomeMessage) {
-      const message = await onUpdateWelcomeMessage(values.welcomeMessage, id)
-      if (message) {
-        toast({
-          title: 'Success',
-          description: message.message,
-        })
+      if (values.welcomeMessage) {
+        const message = await onUpdateWelcomeMessage(values.welcomeMessage, id)
+        if (message) {
+          toast({
+            title: 'Success',
+            description: message.message,
+          })
+        }
       }
+      reset()
+      router.refresh()
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Settings could not be updated — please try again.',
+      })
+    } finally {
+      setLoading(false)
     }
-    reset()
-    router.refresh()
-    setLoading(false)
   })
 
   const onDeleteDomain = async () => {
-    setDeleting(true)
-    const deleted = await onDeleteUserDomain(id)
-    if (deleted) {
+    if (deleting) return
+
+    try {
+      setDeleting(true)
+      const deleted = await onDeleteUserDomain(id)
+      if (deleted) {
+        toast({
+          title: 'Success',
+          description: deleted.message,
+        })
+        router.refresh()
+      }
+    } catch (error) {
       toast({
-        title: 'Success',
-        description: deleted.message,
+        title: 'Error',
+        description: 'Could not delete the domain — please try again.',
       })
+    } finally {
       setDeleting(false)
-      router.refresh()
     }
   }
   return {
@@ -166,28 +187,44 @@ export const useHelpDesk = (id: string) => {
     { id: string; question: string; answer: string }[]
   >([])
   const onSubmitQuestion = handleSubmit(async (values) => {
-    setLoading(true)
-    const question = await onCreateHelpDeskQuestion(
-      id,
-      values.question,
-      values.answer
-    )
-    if (question) {
-      setIsQuestions(question.questions!)
+    try {
+      setLoading(true)
+      const question = await onCreateHelpDeskQuestion(
+        id,
+        values.question,
+        values.answer
+      )
+      if (question) {
+        setIsQuestions(question.questions!)
+        toast({
+          title: question.status == 200 ? 'Success' : 'Error',
+          description: question.message,
+        })
+        reset()
+      }
+    } catch (error) {
       toast({
-        title: question.status == 200 ? 'Success' : 'Error',
-        description: question.message,
+        title: 'Error',
+        description: 'Question could not be submitted — please try again.',
       })
+    } finally {
       setLoading(false)
-      reset()
     }
   })
 
   const onGetQuestions = async () => {
-    setLoading(true)
-    const questions = await onGetAllHelpDeskQuestions(id)
-    if (questions) {
-      setIsQuestions(questions.questions)
+    try {
+      setLoading(true)
+      const questions = await onGetAllHelpDeskQuestions(id)
+      if (questions) {
+        setIsQuestions(questions.questions)
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Could not load help desk questions — please try again.',
+      })
+    } finally {
       setLoading(false)
     }
   }
@@ -221,24 +258,40 @@ export const useFilterQuestions = (id: string) => {
   >([])
 
   const onAddFilterQuestions = handleSubmit(async (values) => {
-    setLoading(true)
-    const questions = await onCreateFilterQuestions(id, values.question)
-    if (questions) {
-      setIsQuestions(questions.questions!)
+    try {
+      setLoading(true)
+      const questions = await onCreateFilterQuestions(id, values.question)
+      if (questions) {
+        setIsQuestions(questions.questions!)
+        toast({
+          title: questions.status == 200 ? 'Success' : 'Error',
+          description: questions.message,
+        })
+        reset()
+      }
+    } catch (error) {
       toast({
-        title: questions.status == 200 ? 'Success' : 'Error',
-        description: questions.message,
+        title: 'Error',
+        description: 'Filter question could not be added — please try again.',
       })
-      reset()
+    } finally {
       setLoading(false)
     }
   })
 
   const onGetQuestions = async () => {
-    setLoading(true)
-    const questions = await onGetAllFilterQuestions(id)
-    if (questions) {
-      setIsQuestions(questions.questions)
+    try {
+      setLoading(true)
+      const questions = await onGetAllFilterQuestions(id)
+      if (questions) {
+        setIsQuestions(questions.questions)
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Could not load filter questions — please try again.',
+      })
+    } finally {
       setLoading(false)
     }
   }
@@ -284,10 +337,14 @@ export const useProducts = (domainId: string) => {
           title: 'Success',
           description: product.message,
         })
-        setLoading(false)
       }
     } catch (error) {
-      console.log(error)
+      toast({
+        title: 'Error',
+        description: 'Product could not be created — please try again.',
+      })
+    } finally {
+      setLoading(false)
     }
   })
 

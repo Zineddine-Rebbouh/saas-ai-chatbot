@@ -23,6 +23,7 @@ export const useEmailMarketing = () => {
   const [processing, setProcessing] = useState<boolean>(false)
   const [isId, setIsId] = useState<string | undefined>(undefined)
   const [editing, setEditing] = useState<boolean>(false)
+  const [sendingId, setSendingId] = useState<string | undefined>(undefined)
 
   const {
     register,
@@ -54,48 +55,81 @@ export const useEmailMarketing = () => {
           title: 'Success',
           description: campaign.message,
         })
-        setLoading(false)
         router.refresh()
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Campaign could not be created — please try again.',
+        })
       }
     } catch (error) {
-      console.log(error)
+      toast({
+        title: 'Error',
+        description: 'Campaign could not be created — please try again.',
+      })
+    } finally {
+      setLoading(false)
     }
   })
 
   const onCreateEmailTemplate = SubmitEmail(async (values) => {
     try {
+      if (!campaignId) {
+        toast({
+          title: 'Error',
+          description: 'Select a campaign before saving the email.',
+        })
+        return
+      }
       setEditing(true)
       const template = JSON.stringify(values.description)
-      const emailTemplate = await onSaveEmailTemplate(template, campaignId!)
+      const emailTemplate = await onSaveEmailTemplate(template, campaignId)
       if (emailTemplate) {
         toast({
           title: 'Success',
           description: emailTemplate.message,
         })
-        setEditing(false)
       }
     } catch (error) {
-      console.log(error)
+      toast({
+        title: 'Error',
+        description: 'Email template could not be saved — please try again.',
+      })
+    } finally {
+      setEditing(false)
     }
   })
 
   const onSelectCampaign = (id: string) => setCampaignId(id)
 
   const onAddCustomersToCampaign = async () => {
+    if (!campaignId) {
+      toast({
+        title: 'Error',
+        description: 'Select a campaign before adding customers.',
+      })
+      return
+    }
+    if (processing) return
+
     try {
       setProcessing(true)
-      const customersAdd = await onAddCustomersToEmail(isSelected, campaignId!)
+      const customersAdd = await onAddCustomersToEmail(isSelected, campaignId)
       if (customersAdd) {
         toast({
           title: 'Success',
           description: customersAdd.message,
         })
-        setProcessing(false)
         setCampaignId(undefined)
         router.refresh()
       }
     } catch (error) {
-      console.log(error)
+      toast({
+        title: 'Error',
+        description: 'Customers could not be added to the campaign — please try again.',
+      })
+    } finally {
+      setProcessing(false)
     }
   }
 
@@ -110,7 +144,10 @@ export const useEmailMarketing = () => {
   }
 
   const onBulkEmail = async (emails: string[], campaignId: string) => {
+    if (sendingId) return
+
     try {
+      setSendingId(campaignId)
       const mails = await onBulkMailer(emails, campaignId)
       if (mails) {
         toast({
@@ -120,7 +157,12 @@ export const useEmailMarketing = () => {
         router.refresh()
       }
     } catch (error) {
-      console.log(error)
+      toast({
+        title: 'Error',
+        description: 'Emails could not be sent — please try again.',
+      })
+    } finally {
+      setSendingId(undefined)
     }
   }
 
@@ -138,6 +180,7 @@ export const useEmailMarketing = () => {
     campaignId,
     onAddCustomersToCampaign,
     onBulkEmail,
+    sendingId,
     onSetAnswersId,
     isId,
     registerEmail,
@@ -157,23 +200,28 @@ export const useAnswers = (id: string) => {
     }[]
   >([])
   const [loading, setLoading] = useState<boolean>(false)
+  const { toast } = useToast()
 
   const onGetCustomerAnswers = async () => {
     try {
       setLoading(true)
       const answer = await onGetAllCustomerResponses(id)
-      setLoading(false)
       if (answer) {
         setAnswers(answer)
       }
     } catch (error) {
-      console.log(error)
+      toast({
+        title: 'Error',
+        description: 'Could not load customer answers — please try again.',
+      })
+    } finally {
+      setLoading(false)
     }
   }
 
   useEffect(() => {
     onGetCustomerAnswers()
-  }, [])
+  }, [id])
 
   return { answers, loading }
 }
@@ -181,6 +229,7 @@ export const useAnswers = (id: string) => {
 export const useEditEmail = (id: string) => {
   const [loading, setLoading] = useState<boolean>(false)
   const [template, setTemplate] = useState<string>('')
+  const { toast } = useToast()
 
   const onGetTemplate = async (id: string) => {
     try {
@@ -189,15 +238,19 @@ export const useEditEmail = (id: string) => {
       if (email) {
         setTemplate(email)
       }
-      setLoading(false)
     } catch (error) {
-      console.log(error)
+      toast({
+        title: 'Error',
+        description: 'Could not load email template — please try again.',
+      })
+    } finally {
+      setLoading(false)
     }
   }
 
   useEffect(() => {
     onGetTemplate(id)
-  }, [])
+  }, [id])
 
   return { loading, template }
 }

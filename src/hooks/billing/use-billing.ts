@@ -69,8 +69,6 @@ export const useCompleteCustomerPayment = (onNext: () => void) => {
       return null
     }
 
-    console.log('no reload')
-
     try {
       setProcessing(true)
 
@@ -84,6 +82,10 @@ export const useCompleteCustomerPayment = (onNext: () => void) => {
 
       if (error) {
         console.log(error)
+        toast({
+          title: 'Payment failed',
+          description: error.message ?? 'Please try again.',
+        })
       }
 
       if (paymentIntent?.status === 'succeeded') {
@@ -93,10 +95,14 @@ export const useCompleteCustomerPayment = (onNext: () => void) => {
         })
         onNext()
       }
-
-      setProcessing(false)
     } catch (error) {
       console.log(error)
+      toast({
+        title: 'Payment failed',
+        description: 'Please try again.',
+      })
+    } finally {
+      setProcessing(false)
     }
   }
 

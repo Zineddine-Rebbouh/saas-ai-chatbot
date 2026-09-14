@@ -6,14 +6,11 @@ export const PortalBanner = () => {
     <div className="w-full bg-muted flex justify-center py-5">
       <Image
         src="/images/logo.png"
-        alt="LOGO"
-        sizes="100vw"
-        style={{
-          width: '100px',
-          height: 'auto',
-        }}
-        width={0}
-        height={0}
+        alt="Domainly AI"
+        width={100}
+        height={40}
+        className="h-auto w-[100px]"
+        priority
       />
     </div>
   )

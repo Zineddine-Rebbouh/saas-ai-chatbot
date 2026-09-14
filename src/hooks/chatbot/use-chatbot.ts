@@ -1,5 +1,5 @@
 import { onAiChatBotAssistant, onGetCurrentChatBot } from '@/actions/bot'
-import { postToParent, pusherClient } from '@/lib/utils'
+import { isPusherConfigured, postToParent, pusherClient } from '@/lib/utils'
 import {
   ChatBotMessageProps,
   ChatBotMessageSchema,
@@ -77,7 +77,7 @@ export const useChatBot = () => {
     )
   }, [botOpened])
 
-  let limitRequest = 0
+  const limitRequest = useRef(0)
 
   const onGetDomainChatBot = async (id: string) => {
     setCurrentBotId(id)
@@ -96,14 +96,15 @@ export const useChatBot = () => {
   }
 
   useEffect(() => {
-    window.addEventListener('message', (e) => {
-      console.log(e.data)
+    const handleMessage = (e: MessageEvent) => {
       const botid = e.data
-      if (limitRequest < 1 && typeof botid == 'string') {
+      if (limitRequest.current < 1 && typeof botid == 'string') {
         onGetDomainChatBot(botid)
-        limitRequest++
+        limitRequest.current++
       }
-    })
+    }
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
   }, [])
 
   const onStartChatting = handleSubmit(async (values) => {
@@ -212,23 +213,25 @@ export const useRealTime = (
   const counterRef = useRef(1)
 
   useEffect(() => {
-    pusherClient.subscribe(chatRoom)
-    pusherClient.bind('realtime-mode', (data: any) => {
-      console.log('✅', data)
-      if (counterRef.current !== 1) {
-        setChats((prev: any) => [
-          ...prev,
-          {
-            role: data.chat.role,
-            content: data.chat.message,
-          },
-        ])
+    if (isPusherConfigured && chatRoom) {
+      counterRef.current = 1
+      pusherClient.subscribe(chatRoom)
+      pusherClient.bind('realtime-mode', (data: any) => {
+        if (counterRef.current !== 1) {
+          setChats((prev: any) => [
+            ...prev,
+            {
+              role: data.chat.role,
+              content: data.chat.message,
+            },
+          ])
+        }
+        counterRef.current += 1
+      })
+      return () => {
+        pusherClient.unbind('realtime-mode')
+        pusherClient.unsubscribe(chatRoom)
       }
-      counterRef.current += 1
-    })
-    return () => {
-      pusherClient.unbind('realtime-mode')
-      pusherClient.unsubscribe(chatRoom)
     }
-  }, [])
+  }, [chatRoom, setChats])
 }

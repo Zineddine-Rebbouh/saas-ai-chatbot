@@ -29,7 +29,8 @@ const ChangePassword = (props: Props) => {
             errors={errors}
             name="password"
             placeholder="New Password"
-            type="text"
+            type="password"
+            autoComplete="new-password"
             inputType="input"
           />
           <FormGenerator
@@ -37,10 +38,11 @@ const ChangePassword = (props: Props) => {
             errors={errors}
             name="confirmPassword"
             placeholder="Confirm Password"
-            type="text"
+            type="password"
+            autoComplete="new-password"
             inputType="input"
           />
-          <Button className="bg-grandis text-gray-700 font-semibold">
+          <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-150">
             <Loader loading={loading}>Change Password</Loader>
           </Button>
         </div>

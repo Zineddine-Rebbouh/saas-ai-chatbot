@@ -1,12 +1,12 @@
 'use client'
-import React from 'react'
-import { loadStripe } from '@stripe/stripe-js'
+import React, { useEffect, useState } from 'react'
 import { useStripeCustomer } from '@/hooks/billing/use-billing'
 import { Loader } from '@/components/loader'
 import { Card } from '@/components/ui/card'
 import { Elements } from '@stripe/react-stripe-js'
 import Image from 'next/image'
 import { CustomerPaymentForm } from './payment-form'
+import { isStripeConfigured, getStripe } from '@/lib/utils'
 
 type Props = {
   onBack(): void
@@ -29,13 +29,30 @@ const PaymentCheckout = ({
   products,
   stripeId,
 }: Props) => {
-  const StripePromise = loadStripe(
-    process.env.NEXT_PUBLIC_STRIPE_PUBLISH_KEY!,
-    {
-      stripeAccount: stripeId!,
+  const [stripePromise, setStripePromise] = useState<any>(null)
+
+  useEffect(() => {
+    if (isStripeConfigured) {
+      getStripe(stripeId).then((stripe) => {
+        if (stripe) setStripePromise(stripe)
+      })
     }
-  )
+  }, [stripeId])
+
   const { stripeSecret, loadForm } = useStripeCustomer(amount!, stripeId!)
+
+  if (!isStripeConfigured) {
+    return (
+      <div className="flex flex-col gap-5 justify-center">
+        <div className="flex justify-center">
+          <h2 className="text-4xl font-bold mb-5">Payment</h2>
+        </div>
+        <p className="text-center text-muted-foreground">
+          Payment processing is not available at this time.
+        </p>
+      </div>
+    )
+  }
 
   return (
     <Loader loading={loadForm}>
@@ -55,7 +72,7 @@ const PaymentCheckout = ({
                   <div className="w-2/12 aspect-square relative">
                     <Image
                       src={`https://ucarecdn.com/${product.image}/`}
-                      alt="product"
+                      alt={product.name}
                       fill
                     />
                   </div>
@@ -67,9 +84,9 @@ const PaymentCheckout = ({
               ))}
           </div>
           <div className="col-span-1 pl-5">
-            {stripeSecret && StripePromise && (
+            {stripeSecret && stripePromise && (
               <Elements
-                stripe={StripePromise}
+                stripe={stripePromise}
                 options={{
                   clientSecret: stripeSecret,
                 }}

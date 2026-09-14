@@ -15,8 +15,9 @@ export const CustomerPaymentForm = ({ onNext }: CustomerPaymentFormProps) => {
     <div className="flex flex-col">
       <PaymentElement />
       <Button
-        type="submit"
+        type="button"
         className="w-full mt-5"
+        disabled={processing}
         onClick={onMakePayment}
       >
         <Loader loading={processing}>Pay</Loader>

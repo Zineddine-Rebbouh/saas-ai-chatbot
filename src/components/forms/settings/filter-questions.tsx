@@ -46,7 +46,7 @@ const FilterQuestions = ({ id }: Props) => {
           <div className="flex flex-col gap-3">
             <Section
               label="Answer to question"
-              message="The anwer for the question above"
+              message="The answer for the question above"
             />
             <FormGenerator
               inputType="textarea"
@@ -59,12 +59,7 @@ const FilterQuestions = ({ id }: Props) => {
               lines={5}
             />
           </div>
-          <Button
-            type="submit"
-            className="bg-orange hover:bg-orange hover:opacity-70 transition duration-150 ease-in-out text-white font-semibold"
-          >
-            Create
-          </Button>
+          <Button type="submit">Create</Button>
         </form>
       </CardContent>
       <CardContent className="p-6 overflow-y-auto chat-window">

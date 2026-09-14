@@ -1,30 +1,29 @@
 export const pricingCards = [
   {
     title: 'Standard',
-    description: 'Perfect for trying out Corinna AI',
+    description: 'Start free. No credit card. See the value before you commit.',
     price: '$0',
     duration: '',
     highlight: 'Key features',
-    features: [' 1 domain ', '10 contacts', '10 Emails per month'],
+    features: ['1 domain', '10 contacts', '10 emails per month'],
     priceId: '',
   },
   {
     title: 'Ultimate',
-    description: 'The ultimate agency kit',
+    description: 'For agencies that move fast and scale hard.',
     price: '$97',
     duration: 'month',
-    highlight: 'Key features',
-    features: [' Unlimited domain ', '500 Contacts', '500 Emails'],
-
+    highlight: 'Everything in Plus, plus',
+    features: ['Unlimited domains', '500 contacts', '500 emails per month'],
     priceId: 'price_1OYxkqFj9oKEERu1KfJGWxgN',
   },
   {
     title: 'Plus',
-    description: 'For serious agency owners',
+    description: 'For businesses ready to convert visitors into revenue.',
     price: '$67',
     duration: 'month',
-    highlight: 'Everything in Starter, plus',
-    features: [' 2 domain ', '50 contacts', '50 Emails per month'],
+    highlight: 'Everything in Standard, plus',
+    features: ['2 domains', '50 contacts', '50 emails per month'],
     priceId: 'price_1OYxkqFj9oKEERu1NbKUxXxN',
   },
 ]

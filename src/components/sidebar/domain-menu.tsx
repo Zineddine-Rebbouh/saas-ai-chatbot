@@ -27,20 +27,20 @@ const DomainMenu = ({ domains, min }: Props) => {
 
   return (
     <div className={cn('flex flex-col gap-3', min ? 'mt-6' : 'mt-3')}>
-      <div className="flex justify-between w-full items-center">
-        {!min && <p className="text-xs text-gray-500">DOMAINS</p>}
+      <div className={cn('flex w-full items-center', min ? 'justify-center' : 'justify-between')}>
+        {!min && <p className="text-xs text-muted-foreground/60 uppercase tracking-wider font-semibold">Domains</p>}
         <AppDrawer
           description="add in your domain address to integrate your chatbot"
           title="Add your business domain"
           onOpen={
-            <div className="cursor-pointer text-gray-500 rounded-full border-2">
-              <Plus />
+            <div className="flex items-center justify-center cursor-pointer text-muted-foreground hover:text-foreground transition-colors rounded-full border border-border w-6 h-6">
+              <Plus size={14} />
             </div>
           }
         >
           <Loader loading={loading}>
             <form
-              className="mt-3 w-6/12 flex flex-col gap-3"
+              className="mt-3 w-full flex flex-col gap-3"
               onSubmit={onAddDomain}
             >
               <FormGenerator
@@ -67,24 +67,31 @@ const DomainMenu = ({ domains, min }: Props) => {
           </Loader>
         </AppDrawer>
       </div>
-      <div className="flex flex-col gap-1 text-ironside font-medium">
+      <div className="flex flex-col gap-1 text-muted-foreground font-medium">
         {domains &&
           domains.map((domain) => (
             <Link
               href={`/settings/${domain.name.split('.')[0]}`}
               key={domain.id}
               className={cn(
-                'flex gap-3 hover:bg-white rounded-full transition duration-100 ease-in-out cursor-pointer ',
-                !min ? 'p-2' : 'py-2',
-                domain.name.split('.')[0] == isDomain && 'bg-white'
+                'flex gap-3 hover:bg-secondary rounded-xl transition duration-100 ease-in-out cursor-pointer items-center',
+                !min ? 'p-2' : 'py-2 px-2 justify-center',
+                domain.name.split('.')[0] == isDomain && 'bg-secondary border border-primary/30'
               )}
             >
-              <Image
-                src={`https://ucarecdn.com/${domain.icon}/`}
-                alt="logo"
-                width={20}
-                height={20}
-              />
+              {domain.icon ? (
+                <Image
+                  src={`https://ucarecdn.com/${domain.icon}/`}
+                  alt={`${domain.name} icon`}
+                  width={20}
+                  height={20}
+                  className="rounded"
+                />
+              ) : (
+                <span className="w-5 h-5 rounded bg-secondary border border-border flex items-center justify-center text-[10px] font-bold text-foreground flex-shrink-0">
+                  {domain.name.charAt(0).toUpperCase()}
+                </span>
+              )}
               {!min && <p className="text-sm">{domain.name}</p>}
             </Link>
           ))}

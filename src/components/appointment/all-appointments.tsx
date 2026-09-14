@@ -43,8 +43,12 @@ const AllAppointments = ({ bookings }: Props) => {
                 {booking.createdAt.getDate()} {booking.createdAt.getFullYear()}
               </div>
               <div>
-                {booking.createdAt.getHours()} {booking.createdAt.getMinutes()}{' '}
-                {booking.createdAt.getHours() > 12 ? 'PM' : 'AM'}
+                {booking.createdAt.getHours() % 12 || 12}:
+                {booking.createdAt
+                  .getMinutes()
+                  .toString()
+                  .padStart(2, '0')}{' '}
+                {booking.createdAt.getHours() >= 12 ? 'PM' : 'AM'}
               </div>
             </TableCell>
             <TableCell className="text-right">

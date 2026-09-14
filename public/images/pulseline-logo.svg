@@ -1,0 +1,26 @@
+<svg width="180" height="36" viewBox="0 0 180 36" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Domainly AI">
+  <!-- Pulse mark: ECG-style wave forming an abstract "P" -->
+  <g>
+    <!-- Wave line: flat → spike → flat -->
+    <polyline
+      points="2,18 10,18 14,6 18,30 22,18 30,18"
+      stroke="#E8643A"
+      stroke-width="2.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      fill="none"
+    />
+    <!-- Trailing dot (pulse end) -->
+    <circle cx="32" cy="18" r="2" fill="#E8643A" opacity="0.5" />
+  </g>
+  <!-- Wordmark -->
+  <text
+    x="42"
+    y="24"
+    font-family="Outfit, system-ui, sans-serif"
+    font-size="18"
+    font-weight="600"
+    letter-spacing="-0.5"
+    fill="#ECEEF4"
+  >Domainly AI</text>
+</svg>

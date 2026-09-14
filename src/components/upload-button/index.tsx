@@ -14,10 +14,10 @@ type Props = {
 const UploadButton = ({ errors, label, register }: Props) => {
   return (
     <>
-      <div className="felx gap-2 items-center">
+      <div className="flex gap-2 items-center">
         <Label
           htmlFor="upload-button"
-          className="flex gap-2 p-3 rounded-lg bg-cream text-gray-600 cursor-pointer font-semibold text-sm items-center"
+          className="flex gap-2 p-3 rounded-lg bg-secondary border border-border text-foreground cursor-pointer font-semibold text-sm items-center hover:border-primary/50 transition-colors"
         >
           <Input
             {...register('image')}
@@ -28,15 +28,15 @@ const UploadButton = ({ errors, label, register }: Props) => {
           <Edit />
           {label}
         </Label>
-        <p className="text-sm text-gray-400 ml-6">
-          Recommended size is 300px * 300px, size <br /> less than 2MB
+        <p className="text-sm text-muted-foreground ml-6">
+          Recommended size 300×300px, max 2MB
         </p>
       </div>
       <ErrorMessage
         errors={errors}
         name="image"
         render={({ message }) => (
-          <p className="text-red-400 mt-2">
+          <p className="text-destructive mt-2">
             {message === 'Required' ? '' : message}
           </p>
         )}

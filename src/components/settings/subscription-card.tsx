@@ -26,7 +26,7 @@ const SubscriptionCard = ({
       <Card
         className={cn(
           'w-full cursor-pointer',
-          payment == id && 'border-orange'
+          payment == id && 'border-primary'
         )}
       >
         <CardContent className="flex justify-between p-2">
@@ -41,13 +41,19 @@ const SubscriptionCard = ({
               </CardDescription>
             </div>
           </div>
-          <div>
+          <div className="flex items-center">
             <div
               className={cn(
-                'w-4 h-4 rounded-full',
-                payment == id ? 'bg-peach' : 'bg-platinum'
+                'w-5 h-5 rounded-full border flex items-center justify-center transition-all duration-150',
+                payment == id
+                  ? 'border-primary bg-primary text-primary-foreground shadow-sm shadow-primary/20 scale-110'
+                  : 'border-border bg-transparent'
               )}
-            />
+            >
+              {payment == id && (
+                <div className="w-1.5 h-1.5 rounded-full bg-primary-foreground animate-pulse" />
+              )}
+            </div>
             <Input
               onClick={() => onPayment(title)}
               value={id}

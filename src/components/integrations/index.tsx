@@ -17,7 +17,7 @@ const IntegrationsList = ({ connections }: Props) => {
       {INTEGRATION_LIST_ITEMS.map((item) => (
         <Card key={item.id}>
           <CardContent className="flex flex-col p-5 gap-2">
-            <div className="flex w-full justify-between items-start gap-x-20">
+            <div className="flex w-full justify-between items-start gap-4">
               <div className="">
                 <div className="w-10 h-10 relative">
                   <Image

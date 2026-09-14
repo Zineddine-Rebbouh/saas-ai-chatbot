@@ -38,7 +38,7 @@ const EditChatbotIcon = ({ register, errors, chatBot }: Props) => {
           />
         </div>
       ) : (
-        <div className="rounded-full cursor-pointer shadow-md w-20 h-20 flex items-center justify-center bg-grandis">
+        <div className="rounded-full cursor-pointer shadow-md w-20 h-20 flex items-center justify-center bg-primary/10 border border-primary/30">
           <BotIcon />
         </div>
       )}

@@ -1,6 +1,7 @@
 import { ChatBotMessageProps } from '@/schemas/conversation.schema'
 import React, { forwardRef } from 'react'
 import { UseFormRegister } from 'react-hook-form'
+import Logo from '@/icons/logo'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 import RealTimeMode from './real-time'
 import Image from 'next/image'
@@ -70,21 +71,18 @@ export const BotWindow = forwardRef<HTMLDivElement, Props>(
     },
     ref
   ) => {
-    console.log(errors)
     return (
-      <div className="h-[670px] w-[450px] flex flex-col bg-white rounded-xl mr-[80px] border-[1px] overflow-hidden">
+      <div className="h-[min(670px,85dvh)] w-[min(450px,calc(100vw-2rem))] flex flex-col bg-card rounded-2xl mr-4 md:mr-[80px] border border-border overflow-hidden shadow-2xl">
         <div className="flex justify-between px-4 pt-4">
           <div className="flex gap-2">
             <Avatar className="w-20 h-20">
-              <AvatarImage
-                src="https://github.com/shadcn.png"
-                alt="@shadcn"
-              />
-              <AvatarFallback>CN</AvatarFallback>
+              <AvatarFallback className="bg-primary/10 text-primary">
+                <Logo variant="mark" width={24} height={24} />
+              </AvatarFallback>
             </Avatar>
             <div className="flex items-start flex-col">
-              <h3 className="text-lg font-bold leading-none">
-                Sales Rep - Web Prodigies
+              <h3 className="text-base font-semibold text-foreground leading-none">
+                Domainly AI
               </h3>
               <p className="text-sm">{domainName.split('.com')[0]}</p>
               {realtimeMode?.mode && (
@@ -116,7 +114,7 @@ export const BotWindow = forwardRef<HTMLDivElement, Props>(
                   background: theme || '',
                   color: textColor || '',
                 }}
-                className="px-3 flex h-[400px] flex-col py-5 gap-3 chat-window overflow-y-auto"
+                className="px-3 flex flex-1 min-h-0 flex-col py-5 gap-3 chat-window overflow-y-auto"
                 ref={ref}
               >
                 {chats.map((chat, key) => (
@@ -129,13 +127,13 @@ export const BotWindow = forwardRef<HTMLDivElement, Props>(
               </div>
               <form
                 onSubmit={onChat}
-                className="flex px-3 py-1 flex-col flex-1 bg-porcelain"
+                className="flex px-3 py-1 flex-col flex-1 bg-card"
               >
                 <div className="flex justify-between">
                   <Input
                     {...register('content')}
                     placeholder="Type your message..."
-                    className="focus-visible:ring-0 flex-1 p-0 focus-visible:ring-offset-0 bg-porcelain rounded-none outline-none border-none"
+                    className="focus-visible:ring-0 flex-1 p-0 focus-visible:ring-offset-0 bg-card rounded-none outline-none border-none"
                   />
                   <Button
                     type="submit"
@@ -177,8 +175,8 @@ export const BotWindow = forwardRef<HTMLDivElement, Props>(
             </div>
           </TabsContent>
         </TabsMenu>
-        <div className="flex justify-center ">
-          <p className="text-gray-400 text-xs">Powered By Web Prodigies</p>
+        <div className="flex justify-center pb-2">
+          <p className="text-muted-foreground/50 text-[10px] tracking-wide">Powered by Domainly AI</p>
         </div>
       </div>
     )

@@ -38,10 +38,10 @@ const Modal = ({
                 <Image
                   src={`https://ucarecdn.com/2c9bd4ab-1f00-41df-bad2-df668f65a232/`}
                   fill
-                  alt="Corinna"
+                  alt="Domainly AI"
                 />
               </div>
-              <div className="text-gray-400">
+              <div className="text-muted-foreground">
                 <ArrowLeft size={20} />
                 <ArrowRight size={20} />
               </div>

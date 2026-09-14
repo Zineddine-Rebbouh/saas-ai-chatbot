@@ -13,20 +13,35 @@ export const extractUUIDFromString = (url: string) => {
   )
 }
 
+const pusherAppId = process.env.NEXT_PUBLIC_PUSHER_APP_ID
+const pusherAppKey = process.env.NEXT_PUBLIC_PUSHER_APP_KEY
+const pusherAppSecret = process.env.NEXT_PUBLIC_PUSHER_APP_SECRET
+const pusherAppCluster = process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER
+
+export const isPusherConfigured = Boolean(pusherAppKey && pusherAppCluster)
+
+const stripePublishKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISH_KEY
+
+export const isStripeConfigured = Boolean(stripePublishKey)
+
+export const getStripe = (stripeAccount?: string): Promise<any> => {
+  if (!isStripeConfigured) return Promise.resolve(null)
+  return import('@stripe/stripe-js').then(({ loadStripe }) =>
+    loadStripe(stripePublishKey!, stripeAccount ? { stripeAccount } : undefined)
+  )
+}
+
 export const pusherServer = new PusherServer({
-  appId: process.env.NEXT_PUBLIC_PUSHER_APP_ID as string,
-  key: process.env.NEXT_PUBLIC_PUSHER_APP_KEY as string,
-  secret: process.env.NEXT_PUBLIC_PUSHER_APP_SECRET as string,
-  cluster: process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTOR as string,
+  appId: pusherAppId ?? '',
+  key: pusherAppKey ?? '',
+  secret: pusherAppSecret ?? '',
+  cluster: pusherAppCluster ?? '',
   useTLS: true,
 })
 
-export const pusherClient = new PusherClient(
-  process.env.NEXT_PUBLIC_PUSHER_APP_KEY as string,
-  {
-    cluster: process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTOR as string,
-  }
-)
+export const pusherClient = new PusherClient(pusherAppKey ?? '', {
+  cluster: pusherAppCluster ?? '',
+})
 
 export const postToParent = (message: string) => {
   window.parent.postMessage(message, '*')
@@ -41,27 +56,21 @@ export const extractEmailsFromString = (text: string) => {
 }
 
 export const getMonthName = (month: number) => {
-  return month == 1
-    ? 'Jan'
-    : month == 2
-    ? 'Feb'
-    : month == 3
-    ? 'Mar'
-    : month == 4
-    ? 'Apr'
-    : month == 5
-    ? 'May'
-    : month == 6
-    ? 'Jun'
-    : month == 7
-    ? 'Jul'
-    : month == 8
-    ? 'Aug'
-    : month == 9
-    ? 'Sep'
-    : month == 10
-    ? 'Oct'
-    : month == 11
-    ? 'Nov'
-    : month == 12 && 'Dec'
+  // JS Date.getMonth() is 0-indexed (0 = Jan) — array lookup is correct
+  return (
+    [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ][month] ?? ''
+  )
 }

@@ -11,7 +11,7 @@ type Props = {}
 const ButtonHandler = (props: Props) => {
   const { setCurrentStep, currentStep } = useAuthContextHook()
   const { formState, getFieldState, getValues } = useFormContext()
-  const { onGenerateOTP } = useSignUpForm()
+  const { onGenerateOTP, loading } = useSignUpForm()
 
   const { isDirty: isName } = getFieldState('fullname', formState)
   const { isDirty: isEmail } = getFieldState('email', formState)
@@ -23,6 +23,7 @@ const ButtonHandler = (props: Props) => {
         <Button
           type="submit"
           className="w-full"
+          disabled={loading}
         >
           Create an account
         </Button>
@@ -43,8 +44,9 @@ const ButtonHandler = (props: Props) => {
     return (
       <div className="w-full flex flex-col gap-3 items-center">
         <Button
-          type="submit"
+          type="button"
           className="w-full"
+          disabled={loading}
           {...(isName &&
             isEmail &&
             isPassword && {
@@ -74,7 +76,7 @@ const ButtonHandler = (props: Props) => {
   return (
     <div className="w-full flex flex-col gap-3 items-center">
       <Button
-        type="submit"
+        type="button"
         className="w-full"
         onClick={() => setCurrentStep((prev: number) => prev + 1)}
       >

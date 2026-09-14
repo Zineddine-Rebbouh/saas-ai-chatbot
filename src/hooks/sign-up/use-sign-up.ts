@@ -29,9 +29,10 @@ export const useSignUpForm = () => {
     password: string,
     onNext: React.Dispatch<React.SetStateAction<number>>
   ) => {
-    if (!isLoaded) return
+    if (!isLoaded || loading) return
 
     try {
+      setLoading(true)
       await signUp.create({
         emailAddress: email,
         password: password,
@@ -43,14 +44,16 @@ export const useSignUpForm = () => {
     } catch (error: any) {
       toast({
         title: 'Error',
-        description: error.errors[0].longMessage,
+        description: error?.errors?.[0]?.longMessage ?? 'Something went wrong!',
       })
+    } finally {
+      setLoading(false)
     }
   }
 
   const onHandleSubmit = methods.handleSubmit(
     async (values: UserRegistrationProps) => {
-      if (!isLoaded) return
+      if (!isLoaded || loading) return
 
       try {
         setLoading(true)
@@ -59,39 +62,50 @@ export const useSignUpForm = () => {
         })
 
         if (completeSignUp.status !== 'complete') {
-          return { message: 'Something went wrong!' }
+          toast({
+            title: 'Error',
+            description: 'Verification failed — please try again.',
+          })
+          return
         }
 
-        if (completeSignUp.status == 'complete') {
-          if (!signUp.createdUserId) return
+        if (!signUp.createdUserId) {
+          toast({
+            title: 'Error',
+            description: 'Something went wrong!',
+          })
+          return
+        }
 
-          const registered = await onCompleteUserRegistration(
-            values.fullname,
-            signUp.createdUserId,
-            values.type
-          )
+        const registered = await onCompleteUserRegistration(
+          values.fullname,
+          signUp.createdUserId,
+          values.type
+        )
 
-          if (registered?.status == 200 && registered.user) {
-            await setActive({
-              session: completeSignUp.createdSessionId,
-            })
-
-            setLoading(false)
-            router.push('/dashboard')
-          }
-
-          if (registered?.status == 400) {
-            toast({
-              title: 'Error',
-              description: 'Something went wrong!',
-            })
-          }
+        if (registered?.status == 200 && registered.user) {
+          await setActive({
+            session: completeSignUp.createdSessionId,
+          })
+          router.push('/dashboard')
+        } else if (registered?.status == 400) {
+          toast({
+            title: 'Error',
+            description: 'Something went wrong!',
+          })
+        } else {
+          toast({
+            title: 'Error',
+            description: 'Account could not be created — please try again.',
+          })
         }
       } catch (error: any) {
         toast({
           title: 'Error',
-          description: error.errors[0].longMessage,
+          description: error?.errors?.[0]?.longMessage ?? 'Something went wrong!',
         })
+      } finally {
+        setLoading(false)
       }
     }
   )
