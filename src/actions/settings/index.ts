@@ -188,6 +188,8 @@ export const onGetCurrentDomainInfo = async (domain: string) => {
             id: true,
             welcomeMessage: true,
             icon: true,
+            background: true,
+            textColor: true,
           },
         },
       },
@@ -328,6 +330,42 @@ export const onUpdateWelcomeMessage = async (
   } catch (error) {
     console.log(error)
     return { status: 400, message: 'Welcome message could not be updated' }
+  }
+}
+
+export const onUpdateChatbotTheme = async (
+  domainId: string,
+  background: string,
+  textColor: string
+) => {
+  try {
+    const owned = await requireDomainOwner(domainId)
+    if (!owned) {
+      return { status: 403, message: 'Not authorized for this domain' }
+    }
+    const update = await client.domain.update({
+      where: {
+        id: domainId,
+      },
+      data: {
+        chatBot: {
+          update: {
+            data: {
+              background: background || null,
+              textColor: textColor || null,
+            },
+          },
+        },
+      },
+    })
+
+    if (update) {
+      return { status: 200, message: 'Chatbot theme updated' }
+    }
+    return { status: 400, message: 'Chatbot theme could not be updated' }
+  } catch (error) {
+    console.log(error)
+    return { status: 400, message: 'Chatbot theme could not be updated' }
   }
 }
 

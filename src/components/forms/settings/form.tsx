@@ -1,12 +1,14 @@
 'use client'
+
 import { useSettings } from '@/hooks/settings/use-settings'
 import React from 'react'
 import { DomainUpdate } from './domain-update'
 import CodeSnippet from './code-snippet'
 import PremiumBadge from '@/icons/premium-badge'
 import EditChatbotIcon from './edit-chatbot-icon'
+import BotThemePicker from './bot-theme'
+import BotPreview from './bot-preview'
 import dynamic from 'next/dynamic'
-import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Loader } from '@/components/loader'
 import {
@@ -36,6 +38,8 @@ type Props = {
     id: string
     icon: string | null
     welcomeMessage: string | null
+    background?: string | null
+    textColor?: string | null
   } | null
 }
 
@@ -47,7 +51,10 @@ const SettingsForm = ({ id, name, chatBot, plan }: Props) => {
     onDeleteDomain,
     deleting,
     loading,
-  } = useSettings(id)
+    themeBg,
+    themeText,
+    onSaveTheme,
+  } = useSettings(id, chatBot?.background, chatBot?.textColor)
 
   return (
     <form
@@ -77,22 +84,31 @@ const SettingsForm = ({ id, name, chatBot, plan }: Props) => {
           </span>
         </div>
         <div className="px-6 py-6">
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="col-span-1 flex flex-col gap-6 order-last md:order-first">
+          <div className="grid lg:grid-cols-2 gap-8 items-start">
+            <div className="col-span-1 flex flex-col gap-6">
               <EditChatbotIcon chatBot={chatBot} register={register} errors={errors} />
+              
               <WelcomeMessage
-                message={chatBot?.welcomeMessage!}
+                message={chatBot?.welcomeMessage || ''}
                 register={register}
                 errors={errors}
               />
+
+              <BotThemePicker
+                background={themeBg}
+                textColor={themeText}
+                onThemeChange={onSaveTheme}
+              />
             </div>
-            <div className="col-span-1 relative">
-              <Image
-                src="/images/bot-ui.png"
-                className="sticky top-0 rounded-xl drop-shadow-md"
-                alt="bot-ui"
-                width={530}
-                height={769}
+
+            {/* Live Interactive Preview */}
+            <div className="col-span-1 lg:sticky lg:top-6">
+              <BotPreview
+                domainName={name}
+                icon={chatBot?.icon}
+                welcomeMessage={chatBot?.welcomeMessage}
+                background={themeBg}
+                textColor={themeText}
               />
             </div>
           </div>

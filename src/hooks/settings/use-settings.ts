@@ -6,6 +6,7 @@ import {
   onDeleteUserDomain,
   onGetAllFilterQuestions,
   onGetAllHelpDeskQuestions,
+  onUpdateChatbotTheme,
   onUpdateDomain,
   onUpdatePassword,
   onUpdateWelcomeMessage,
@@ -82,7 +83,7 @@ export const useChangePassword = () => {
   }
 }
 
-export const useSettings = (id: string) => {
+export const useSettings = (id: string, initialBg?: string | null, initialText?: string | null) => {
   const {
     register,
     handleSubmit,
@@ -95,6 +96,13 @@ export const useSettings = (id: string) => {
   const { toast } = useToast()
   const [loading, setLoading] = useState<boolean>(false)
   const [deleting, setDeleting] = useState<boolean>(false)
+  const [themeBg, setThemeBg] = useState<string>(initialBg || '#09090b')
+  const [themeText, setThemeText] = useState<string>(initialText || '#ffffff')
+
+  const onSaveTheme = async (bg: string, text: string) => {
+    setThemeBg(bg)
+    setThemeText(text)
+  }
 
   const onUpdateSettings = handleSubmit(async (values) => {
     try {
@@ -124,6 +132,16 @@ export const useSettings = (id: string) => {
           toast({
             title: 'Success',
             description: message.message,
+          })
+        }
+      }
+      // Save theme colors
+      if (themeBg || themeText) {
+        const themeRes = await onUpdateChatbotTheme(id, themeBg, themeText)
+        if (themeRes && themeRes.status === 200) {
+          toast({
+            title: 'Success',
+            description: themeRes.message,
           })
         }
       }
@@ -168,6 +186,9 @@ export const useSettings = (id: string) => {
     loading,
     onDeleteDomain,
     deleting,
+    themeBg,
+    themeText,
+    onSaveTheme,
   }
 }
 
