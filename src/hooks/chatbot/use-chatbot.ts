@@ -71,8 +71,8 @@ export const useChatBot = () => {
   useEffect(() => {
     postToParent(
       JSON.stringify({
-        width: botOpened ? 550 : 80,
-        height: botOpened ? 800 : 80,
+        width: botOpened ? 460 : 80,
+        height: botOpened ? 700 : 80,
       })
     )
   }, [botOpened])
@@ -87,7 +87,7 @@ export const useChatBot = () => {
         ...prev,
         {
           role: 'assistant',
-          content: chatbot.chatBot?.welcomeMessage!,
+          content: chatbot.chatBot?.welcomeMessage || 'Hey there, have a question? Text us here!',
         },
       ])
       setCurrentBot(chatbot)
@@ -98,8 +98,8 @@ export const useChatBot = () => {
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
       const botid = e.data
-      if (limitRequest.current < 1 && typeof botid == 'string') {
-        onGetDomainChatBot(botid)
+      if (limitRequest.current < 1 && typeof botid === 'string' && botid.trim().length > 5) {
+        onGetDomainChatBot(botid.trim())
         limitRequest.current++
       }
     }
