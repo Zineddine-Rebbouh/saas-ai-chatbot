@@ -5,11 +5,44 @@ import { extractEmailsFromString, extractURLfromString, getAppUrl } from '@/lib/
 import { emitRealtime } from '@/lib/realtime'
 import { clerkClient } from '@clerk/nextjs/server'
 import { onMailer } from '../mailer'
-import OpenAi from 'openai'
 
-const openai = new OpenAi({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash'
+
+// Minimal Gemini chat helper (native fetch, no extra deps).
+// Maps OpenAI-style { role: 'assistant' | 'user', content } history to
+// Gemini's { role: 'model' | 'user', parts } format.
+const geminiChat = async (
+  systemPrompt: string,
+  history: { role: 'assistant' | 'user'; content: string }[],
+  message: string
+): Promise<string> => {
+  const contents = [
+    ...history.map((h) => ({
+      role: h.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: h.content }],
+    })),
+    { role: 'user', parts: [{ text: message }] },
+  ]
+
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${process.env.GEMINI_API_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system_instruction: { parts: [{ text: systemPrompt }] },
+        contents,
+      }),
+    }
+  )
+
+  if (!res.ok) {
+    throw new Error(`Gemini API error: ${res.status} ${await res.text()}`)
+  }
+
+  const data = await res.json()
+  return data.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
+}
 
 // Internal helper (not exported — not callable as a server action).
 const storeConversation = async (
@@ -221,11 +254,7 @@ export const onAiChatBotAssistant = async (
         await storeConversation(room.id, message, author)
 
         const appUrl = getAppUrl()
-        const chatCompletion = await openai.chat.completions.create({
-          messages: [
-            {
-              role: 'assistant',
-              content: `
+        const systemPrompt = `
               You will get an array of questions that you must ask the customer. 
               
               Progress the conversation using those questions. 
@@ -247,18 +276,10 @@ export const onAiChatBotAssistant = async (
               if the customer agrees to book an appointment send them this link ${appUrl}/portal/${id}/appointment/${existing.id}
 
               if the customer wants to buy a product redirect them to the payment page ${appUrl}/portal/${id}/payment/${existing.id}
-          `,
-            },
-            ...history,
-            {
-              role: 'user',
-              content: message,
-            },
-          ],
-          model: 'gpt-3.5-turbo',
-        })
+          `
+        const reply = await geminiChat(systemPrompt, history, message)
 
-        if (chatCompletion.choices[0].message.content?.includes('(realtime)')) {
+        if (reply?.includes('(realtime)')) {
           const realtime = await client.chatRoom.update({
             where: {
               id: room.id,
@@ -271,10 +292,7 @@ export const onAiChatBotAssistant = async (
           if (realtime) {
             const response = {
               role: 'assistant',
-              content: chatCompletion.choices[0].message.content.replace(
-                '(realtime)',
-                ''
-              ),
+              content: reply.replace('(realtime)', ''),
             }
 
             await storeConversation(room.id, response.content, 'assistant')
@@ -311,10 +329,8 @@ export const onAiChatBotAssistant = async (
           }
         }
 
-        if (chatCompletion) {
-          const generatedLink = extractURLfromString(
-            chatCompletion.choices[0].message.content as string
-          )
+        if (reply) {
+          const generatedLink = extractURLfromString(reply)
 
           if (generatedLink) {
             const link = generatedLink[0]
@@ -335,7 +351,7 @@ export const onAiChatBotAssistant = async (
 
           const response = {
             role: 'assistant',
-            content: chatCompletion.choices[0].message.content,
+            content: reply,
           }
 
           await storeConversation(room.id, `${response.content}`, 'assistant')
@@ -343,31 +359,22 @@ export const onAiChatBotAssistant = async (
           return { response }
         }
       }
-      const chatCompletion = await openai.chat.completions.create({
-        messages: [
-          {
-            role: 'assistant',
-            content: `
+      const reply = await geminiChat(
+        `
             You are a highly knowledgeable and experienced sales representative for a ${chatBotDomain.name} that offers a valuable product or service. Your goal is to have a natural, human-like conversation with the customer in order to understand their needs, provide relevant information, and ultimately guide them towards making a purchase or redirect them to a link if they havent provided all relevant information.
             Right now you are talking to a customer for the first time. Start by giving them a warm welcome on behalf of ${chatBotDomain.name} and make them feel welcomed.
 
             Your next task is lead the conversation naturally to get the customers email address. Be respectful and never break character
 
           `,
-          },
-          ...history,
-          {
-            role: 'user',
-            content: message,
-          },
-        ],
-        model: 'gpt-3.5-turbo',
-      })
+        history,
+        message
+      )
 
-      if (chatCompletion) {
+      if (reply) {
         const response = {
           role: 'assistant',
-          content: chatCompletion.choices[0].message.content,
+          content: reply,
         }
 
         return { response }
