@@ -1,30 +1,26 @@
 import { onGetAllCampaigns, onGetAllCustomers } from '@/actions/mail'
-import EmailMarketing from '@/components/email-marketing'
-import InfoBar from '@/components/infobar'
+import CampaignWorkspace from '@/components/email-marketing/campaign-workspace'
 import { getCurrentUser } from '@/lib/current-user'
 import React from 'react'
 
-type Props = {}
-
-const Page = async (props: Props) => {
+const Page = async () => {
   const user = await getCurrentUser()
 
   if (!user) return null
-  // Independent queries run concurrently instead of back to back.
+
   const [customers, campaigns] = await Promise.all([
     onGetAllCustomers(),
     onGetAllCampaigns(),
   ])
 
   return (
-    <>
-      <InfoBar></InfoBar>
-      <EmailMarketing
+    <div className="overflow-y-auto w-full flex-1 h-0 pr-4">
+      <CampaignWorkspace
         campaign={campaigns?.campaign ?? []}
         subscription={customers?.subscription ?? null}
         domains={customers?.domains ?? []}
       />
-    </>
+    </div>
   )
 }
 

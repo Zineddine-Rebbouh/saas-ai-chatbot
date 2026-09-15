@@ -137,3 +137,107 @@ export const getUserTransactions = async () => {
     return null
   }
 }
+
+export const getUserConversationsCount = async () => {
+  try {
+    const user = await getCurrentUser()
+    if (!user) return 0
+
+    const count = await client.chatRoom.count({
+      where: {
+        Customer: {
+          Domain: {
+            User: {
+              clerkId: user.clerkId,
+            },
+          },
+        },
+      },
+    })
+    return count
+  } catch (error) {
+    console.log(error)
+    return 0
+  }
+}
+
+export const getDashboardRecentConversations = async () => {
+  try {
+    const user = await getCurrentUser()
+    if (!user) return []
+
+    const rooms = await client.chatRoom.findMany({
+      where: {
+        Customer: {
+          Domain: {
+            User: {
+              clerkId: user.clerkId,
+            },
+          },
+        },
+      },
+      select: {
+        id: true,
+        live: true,
+        createdAt: true,
+        updatedAt: true,
+        Customer: {
+          select: {
+            id: true,
+            email: true,
+            questions: {
+              select: {
+                answered: true,
+              },
+            },
+            Domain: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+        message: {
+          select: {
+            id: true,
+            message: true,
+            role: true,
+            createdAt: true,
+            seen: true,
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: 1,
+        },
+      },
+      orderBy: {
+        updatedAt: 'desc',
+      },
+      take: 6,
+    })
+
+    return rooms.map((r) => {
+      const hasResponses =
+        (r.Customer?.questions?.filter((q) => q.answered)?.length ?? 0) > 0
+      const lastMsg = r.message[0]
+      return {
+        id: r.id,
+        email: r.Customer?.email || 'Anonymous Visitor',
+        domain: r.Customer?.Domain?.name || 'domainly.ai',
+        lastMessage: lastMsg?.message || 'Started conversation',
+        lastMessageRole: lastMsg?.role || 'user',
+        updatedAt: lastMsg?.createdAt || r.updatedAt,
+        status: hasResponses
+          ? ('lead' as const)
+          : r.live
+          ? ('replied' as const)
+          : ('new' as const),
+      }
+    })
+  } catch (error) {
+    console.log(error)
+    return []
+  }
+}
+

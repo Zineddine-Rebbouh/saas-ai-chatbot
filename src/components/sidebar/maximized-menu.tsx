@@ -1,4 +1,4 @@
-import { SIDE_BAR_MENU } from '@/constants/menu'
+import { GROUPED_SIDE_BAR_MENU } from '@/constants/menu'
 import { LogOut, Menu } from 'lucide-react'
 import Image from 'next/image'
 import React from 'react'
@@ -22,47 +22,53 @@ type Props = {
 
 const MaxMenu = ({ current, domains, onExpand, onSignOut }: Props) => {
   return (
-    <div className="py-3 px-4 flex flex-col h-full">
-      <div className="flex justify-between items-center">
+    <div className="py-4 px-3 flex flex-col h-full select-none">
+      <div className="flex justify-between items-center px-1">
         <Logo
           width={110}
           height={22}
-          className="animate-fade-in opacity-0 delay-300 fill-mode-forwards"
+          className="animate-fade-in opacity-0 delay-150 fill-mode-forwards"
         />
         <button
           onClick={onExpand}
           title="Collapse sidebar"
           aria-label="Collapse sidebar"
-          className="cursor-pointer animate-fade-in opacity-0 delay-300 fill-mode-forwards rounded-lg p-1 hover:bg-secondary"
+          className="cursor-pointer text-muted-foreground hover:text-foreground rounded-lg p-1.5 hover:bg-secondary transition-colors"
         >
-          <Menu />
+          <Menu size={18} />
         </button>
       </div>
-      <div className="animate-fade-in opacity-0 delay-300 fill-mode-forwards flex flex-col justify-between h-full pt-10">
-        <div className="flex flex-col">
-          <p className="text-xs text-muted-foreground/60 mb-3 uppercase tracking-wider font-semibold">Menu</p>
-          {SIDE_BAR_MENU.map((menu, key) => (
-            <MenuItem
-              size="max"
-              {...menu}
-              key={key}
-              current={current}
-            />
-          ))}
-          <DomainMenu domains={domains} />
-        </div>
-        <div className="flex flex-col">
-          <p className="text-xs text-muted-foreground/60 mb-3 uppercase tracking-wider font-semibold">Options</p>
-          <MenuItem
-            size="max"
-            label="Sign out"
-            icon={<LogOut />}
-            onSignOut={onSignOut}
-          />
-        </div>
+
+      <div className="flex-1 overflow-y-auto mt-6 pr-1 space-y-5">
+        {GROUPED_SIDE_BAR_MENU.map((group) => (
+          <div key={group.group} className="flex flex-col">
+            <p className="text-[10px] tracking-wider text-muted-foreground/60 px-3 mb-1 uppercase font-semibold">
+              {group.group}
+            </p>
+            {group.items.map((menu, key) => (
+              <MenuItem
+                size="max"
+                {...menu}
+                key={key}
+                current={current}
+              />
+            ))}
+          </div>
+        ))}
+        <DomainMenu domains={domains} />
+      </div>
+
+      <div className="pt-3 border-t border-border mt-auto">
+        <MenuItem
+          size="max"
+          label="Sign out"
+          icon={<LogOut size={16} />}
+          onSignOut={onSignOut}
+        />
       </div>
     </div>
   )
 }
 
 export default MaxMenu
+

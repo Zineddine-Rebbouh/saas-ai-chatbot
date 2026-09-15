@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { ArrowLeft, Radio } from 'lucide-react'
+import Logo from '@/icons/logo'
 
 export default function NotFound() {
   return (
@@ -24,18 +25,8 @@ export default function NotFound() {
       <div className="relative z-10 text-center max-w-md">
         {/* Logo mark */}
         <div className="flex justify-center mb-8">
-          <div className="w-16 h-16 bg-primary/10 border border-primary/20 rounded-2xl flex items-center justify-center">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-              <polyline
-                points="2,16 8,16 12,5 16,27 20,16 28,16"
-                stroke="#E8643A"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-              />
-              <circle cx="29.5" cy="16" r="1.5" fill="#E8643A" opacity="0.6" />
-            </svg>
+          <div className="w-16 h-16 bg-primary/10 border border-primary/20 rounded-2xl flex items-center justify-center overflow-hidden">
+            <Logo variant="mark" width={40} height={40} />
           </div>
         </div>
 

@@ -196,6 +196,41 @@ export const onGetAllBookingsForCurrentUser = async () => {
       orderBy: {
         date: 'desc',
       },
+      // ponytail: capped page, cursor pagination if accounts outgrow 500 rows
+      take: 500,
+    })
+
+    return { bookings: bookings ?? [] }
+  } catch (error) {
+    console.log(error)
+    return { bookings: [] }
+  }
+}
+
+/**
+ * Dashboard preview: the next few upcoming bookings only. The dashboard used
+ * to reuse the unbounded all-bookings list just to render 4 rows.
+ */
+export const onGetUpcomingBookingsForCurrentUser = async (limit = 5) => {
+  try {
+    const user = await requireUser()
+    if (!user) return { bookings: [] }
+    const bookings = await client.bookings.findMany({
+      where: {
+        date: { gte: new Date() },
+        Customer: {
+          Domain: {
+            User: {
+              clerkId: user.clerkId,
+            },
+          },
+        },
+      },
+      select: BOOKING_SELECT,
+      orderBy: {
+        date: 'asc',
+      },
+      take: limit,
     })
 
     return { bookings: bookings ?? [] }
@@ -239,6 +274,8 @@ export const onGetTodaysBookings = async () => {
       orderBy: {
         date: 'asc',
       },
+      // ponytail: capped page, cursor pagination if a day outgrows 200 rows
+      take: 200,
     })
 
     return { bookings: bookings ?? [] }

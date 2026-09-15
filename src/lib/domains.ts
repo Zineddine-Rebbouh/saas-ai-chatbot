@@ -15,20 +15,17 @@ export const getSidebarDomains = cache(
   async (): Promise<SidebarDomain[]> => {
     const user = await getCurrentUser()
     if (!user) return []
-    const row = await client.user.findUnique({
-      where: { clerkId: user.clerkId },
+    // Single query on the indexed Domain.userId — the previous version did a
+    // second user.findUnique + nested domains select on top of getCurrentUser.
+    return client.domain.findMany({
+      where: { userId: user.userId },
       select: {
-        domains: {
-          select: {
-            id: true,
-            name: true,
-            icon: true,
-          },
-          orderBy: { name: 'asc' },
-        },
+        id: true,
+        name: true,
+        icon: true,
       },
+      orderBy: { name: 'asc' },
     })
-    return row?.domains ?? []
   }
 )
 

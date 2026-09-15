@@ -3,7 +3,7 @@
 import { client } from '@/lib/prisma'
 import { extractEmailsFromString, extractURLfromString, getAppUrl } from '@/lib/utils'
 import { emitRealtime } from '@/lib/realtime'
-import { clerkClient } from '@clerk/nextjs'
+import { clerkClient } from '@clerk/nextjs/server'
 import { onMailer } from '../mailer'
 import OpenAi from 'openai'
 

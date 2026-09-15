@@ -41,3 +41,16 @@ export const requireCustomerOwner = async (
   })
   return !!customer
 }
+
+export const requireChatRoomOwner = async (
+  chatRoomId: string
+): Promise<boolean> => {
+  const user = await getCurrentUser()
+  if (!user || !chatRoomId) return false
+  const room = await client.chatRoom.findFirst({
+    where: { id: chatRoomId, Customer: { Domain: { userId: user.userId } } },
+    select: { id: true },
+  })
+  return !!room
+}
+

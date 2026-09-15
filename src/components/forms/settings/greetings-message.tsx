@@ -15,16 +15,16 @@ const GreetingsMessage = ({
   errors,
 }: GreetingMessageProps) => {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
       <Section
         label="Greeting message"
-        message="Customize your welcome message"
+        message="Customize the first message your customers see when opening the chat."
       />
-      <div className="lg:w-[500px]">
+      <div className="w-full">
         <FormGenerator
           placeholder={message}
           inputType="textarea"
-          lines={2}
+          lines={3}
           register={register}
           errors={errors}
           name="welcomeMessage"

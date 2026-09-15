@@ -1,7 +1,5 @@
-import { SIDE_BAR_MENU } from '@/constants/menu'
-
+import { GROUPED_SIDE_BAR_MENU } from '@/constants/menu'
 import React from 'react'
-
 import { LogOut } from 'lucide-react'
 import { MenuLogo } from '@/icons/menu-logo'
 import MenuItem from './menu-item'
@@ -28,42 +26,48 @@ export const MinMenu = ({
   domains,
 }: MinMenuProps) => {
   return (
-    <div className="p-2 flex flex-col items-center h-full">
+    <div className="py-4 px-2 flex flex-col items-center h-full select-none">
       <span
         role="button"
         tabIndex={0}
         title="Expand sidebar"
         aria-label="Expand sidebar"
+        onClick={onShrink}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') onShrink()
         }}
-        className="animate-fade-in opacity-0 delay-300 fill-mode-forwards cursor-pointer rounded-lg focus-visible:outline-none"
+        className="cursor-pointer rounded-lg p-1.5 hover:bg-secondary transition-colors focus-visible:outline-none"
       >
         <MenuLogo onClick={onShrink} />
       </span>
-      <div className="animate-fade-in opacity-0 delay-300 fill-mode-forwards flex flex-col justify-between h-full pt-10">
-        <div className="flex flex-col">
-          {SIDE_BAR_MENU.map((menu, key) => (
-            <MenuItem
-              size="min"
-              {...menu}
-              key={key}
-              current={current}
-            />
-          ))}
-          <DomainMenu
-            min
-            domains={domains}
-          />
-        </div>
-        <div className="flex flex-col">
-          <MenuItem
-            size="min"
-            label="Sign out"
-            icon={<LogOut />}
-            onSignOut={onSignOut}
-          />
-        </div>
+
+      <div className="flex-1 overflow-y-auto w-full flex flex-col items-center mt-6 space-y-4">
+        {GROUPED_SIDE_BAR_MENU.map((group, idx) => (
+          <div key={group.group} className="w-full flex flex-col items-center">
+            {idx > 0 && <div className="w-6 h-px bg-border/60 my-2" />}
+            {group.items.map((menu, key) => (
+              <MenuItem
+                size="min"
+                {...menu}
+                key={key}
+                current={current}
+              />
+            ))}
+          </div>
+        ))}
+        <DomainMenu
+          min
+          domains={domains}
+        />
+      </div>
+
+      <div className="pt-3 border-t border-border w-full flex justify-center mt-auto">
+        <MenuItem
+          size="min"
+          label="Sign out"
+          icon={<LogOut size={16} />}
+          onSignOut={onSignOut}
+        />
       </div>
     </div>
   )

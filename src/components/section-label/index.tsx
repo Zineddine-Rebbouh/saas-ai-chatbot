@@ -7,9 +7,9 @@ type SectionProps = {
 
 const Section = ({ label, message }: SectionProps) => {
   return (
-    <div >
-      <p className="text-sm font-medium">{label}</p>
-      <p className="text-sm font-light">{message}</p>
+    <div className="flex flex-col gap-0.5 pl-3 border-l-2 border-primary/60">
+      <p className="text-sm font-semibold text-foreground tracking-tight">{label}</p>
+      <p className="text-xs text-muted-foreground leading-relaxed">{message}</p>
     </div>
   )
 }

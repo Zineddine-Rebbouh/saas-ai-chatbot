@@ -12,6 +12,7 @@ import FormGenerator from '../form-generator'
 import { Button } from '@/components/ui/button'
 import { Loader } from '@/components/loader'
 import Accordion from '@/components/accordian'
+import { PlusCircle, HelpCircle } from 'lucide-react'
 
 type Props = {
   id: string
@@ -22,17 +23,20 @@ const HelpDesk = ({ id }: Props) => {
     useHelpDesk(id)
 
   return (
-    <Card className="w-full grid grid-cols-1 lg:grid-cols-2">
-      <CardContent className="p-6 border-r-[1px]">
-        <CardTitle>Help Desk</CardTitle>
+    <Card className="w-full grid grid-cols-1 lg:grid-cols-2 rounded-xl border border-border/60 overflow-hidden shadow-sm">
+      <CardContent className="p-6 border-b lg:border-b-0 lg:border-r border-border/60 bg-card">
+        <div className="flex items-center gap-2 mb-6">
+          <PlusCircle size={18} className="text-primary" />
+          <CardTitle className="text-base font-semibold">Add FAQ Item</CardTitle>
+        </div>
         <form
           onSubmit={onSubmitQuestion}
-          className="flex flex-col gap-6 mt-10"
+          className="flex flex-col gap-5"
         >
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2">
             <Section
               label="Question"
-              message="Add a question that you believe is frequently asked."
+              message="Add a question that customers frequently ask."
             />
             <FormGenerator
               inputType="input"
@@ -40,14 +44,14 @@ const HelpDesk = ({ id }: Props) => {
               errors={errors}
               form="help-desk-form"
               name="question"
-              placeholder="Type your question"
+              placeholder="e.g. What are your business hours?"
               type="text"
             />
           </div>
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2">
             <Section
-              label="Answer to question"
-              message="The answer for the question above."
+              label="Answer"
+              message="The response the chatbot should provide."
             />
             <FormGenerator
               inputType="textarea"
@@ -55,26 +59,41 @@ const HelpDesk = ({ id }: Props) => {
               errors={errors}
               name="answer"
               form="help-desk-form"
-              placeholder="Type your answer"
+              placeholder="e.g. We are open Monday to Friday from 9am to 6pm EST."
               type="text"
-              lines={5}
+              lines={4}
             />
           </div>
-          <Button type="submit">Create</Button>
+          <Button type="submit" className="w-full font-semibold h-10 rounded-lg shadow-sm">
+            Create FAQ
+          </Button>
         </form>
       </CardContent>
-      <CardContent className="p-6 overflow-y-auto chat-window">
+      <CardContent className="p-6 overflow-y-auto max-h-[480px] bg-muted/20 flex flex-col gap-3">
+        <div className="flex items-center justify-between pb-2 border-b border-border/40">
+          <div className="flex items-center gap-2">
+            <HelpCircle size={16} className="text-muted-foreground" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Knowledge Base ({isQuestions.length})
+            </span>
+          </div>
+        </div>
         <Loader loading={loading}>
           {isQuestions.length ? (
-            isQuestions.map((question) => (
-              <Accordion
-                key={question.id}
-                trigger={question.question}
-                content={question.answer}
-              />
-            ))
+            <div className="flex flex-col gap-2 pt-1">
+              {isQuestions.map((question) => (
+                <Accordion
+                  key={question.id}
+                  trigger={question.question}
+                  content={question.answer}
+                />
+              ))}
+            </div>
           ) : (
-            <CardDescription>No Questions to show</CardDescription>
+            <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground gap-2">
+              <HelpCircle className="w-8 h-8 opacity-40" />
+              <CardDescription>No FAQ questions created yet.</CardDescription>
+            </div>
           )}
         </Loader>
       </CardContent>

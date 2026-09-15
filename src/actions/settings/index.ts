@@ -2,7 +2,7 @@
 import { client } from '@/lib/prisma'
 import { requireDomainOwner } from '@/lib/server-auth'
 import { getClerkUserId, getCurrentUser } from '@/lib/current-user'
-import { getSidebarDomains } from '@/lib/domains'
+import { getOwnedDomainIdBySlug, getSidebarDomains } from '@/lib/domains'
 import { clerkClient } from '@clerk/nextjs/server'
 
 export const onIntegrateDomain = async (domain: string, icon: string) => {
@@ -141,41 +141,59 @@ export const onGetCurrentDomainInfo = async (domain: string) => {
   const user = await getCurrentUser()
   if (!user) return
   try {
-    const userDomain = await client.user.findUnique({
-      where: {
-        clerkId: user.clerkId,
-      },
-      select: {
-        subscription: {
-          select: {
-            plan: true,
-          },
+    // Resolve via the request-cached sidebar list: exact slug match, zero
+    // extra queries in the same request, and no LIKE %...% scan that could
+    // match multiple domains. Runs concurrently with the plan lookup.
+    const [domainId, account] = await Promise.all([
+      getOwnedDomainIdBySlug(domain),
+      client.user.findUnique({
+        where: {
+          clerkId: user.clerkId,
         },
-        domains: {
-          where: {
-            name: {
-              contains: domain,
+        select: {
+          subscription: {
+            select: {
+              plan: true,
             },
           },
+        },
+      }),
+    ])
+    if (!domainId) return
+    const info = await client.domain.findFirst({
+      where: {
+        id: domainId,
+        userId: user.userId,
+      },
+      select: {
+        id: true,
+        name: true,
+        icon: true,
+        userId: true,
+        products: {
           select: {
             id: true,
             name: true,
+            price: true,
+            image: true,
+            createdAt: true,
+            domainId: true,
+          },
+          orderBy: { createdAt: 'desc' },
+          // ponytail: capped page, cursor pagination if catalogs outgrow 100
+          take: 100,
+        },
+        chatBot: {
+          select: {
+            id: true,
+            welcomeMessage: true,
             icon: true,
-            userId: true,
-            products: true,
-            chatBot: {
-              select: {
-                id: true,
-                welcomeMessage: true,
-                icon: true,
-              },
-            },
           },
         },
       },
     })
-    if (userDomain) {
-      return userDomain
+    if (info) {
+      return { subscription: account?.subscription, domains: [info] }
     }
   } catch (error) {
     console.log(error)
@@ -184,8 +202,9 @@ export const onGetCurrentDomainInfo = async (domain: string) => {
 
 export const onUpdateDomain = async (id: string, name: string) => {
   try {
+    const user = await getCurrentUser()
     const owned = await requireDomainOwner(id)
-    if (!owned) {
+    if (!owned || !user) {
       return { status: 403, message: 'Not authorized for this domain' }
     }
     const trimmed = name?.trim()
@@ -199,7 +218,7 @@ export const onUpdateDomain = async (id: string, name: string) => {
           contains: trimmed,
         },
         NOT: { id },
-        User: { clerkId: owned.clerkId },
+        userId: user.userId,
       },
     })
 
@@ -235,6 +254,7 @@ export const onUpdateDomain = async (id: string, name: string) => {
     return { status: 400, message: 'Domain could not be updated' }
   }
 }
+
 
 export const onChatBotImageUpdate = async (id: string, icon: string) => {
   const owned = await requireDomainOwner(id)
@@ -321,7 +341,7 @@ export const onDeleteUserDomain = async (id: string) => {
     //check that domain belongs to this user and delete
     const deletedDomain = await client.domain.delete({
       where: {
-        userId: user.id,
+        userId: user.userId,
         id,
       },
       select: {

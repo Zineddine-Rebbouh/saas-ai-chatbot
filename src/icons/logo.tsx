@@ -1,9 +1,8 @@
-import React from 'react'
-
-const EMBER = 'hsl(14 78% 57%)'
+import Image from 'next/image'
+import { cn } from '@/lib/utils'
 
 type LogoProps = {
-  /** 'wordmark' renders the full logo (mark + "Domainly AI"), 'mark' renders just the pulse icon */
+  /** Kept for backwards compat — ignored, /logo.png already contains the full lockup. */
   variant?: 'wordmark' | 'mark'
   width?: number
   height?: number
@@ -13,74 +12,24 @@ type LogoProps = {
 
 /**
  * Single source of truth for the Domainly AI logo.
- * The wordmark text uses `fill-foreground` so it adapts to the active theme.
+ * /logo.png is square, so `height` drives the size (width is ignored
+ * to avoid distortion). The white backing keeps the dark wordmark
+ * readable on the default dark theme while staying invisible on light.
  */
-export const Logo = ({
-  variant = 'wordmark',
-  width,
-  height,
-  className,
-  onClick,
-}: LogoProps) => {
-  if (variant === 'mark') {
-    return (
-      <svg
-        width={width ?? 32}
-        height={height ?? 32}
-        viewBox="0 0 32 32"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className={className}
-        onClick={onClick}
-        role="img"
-        aria-label="Domainly AI"
-      >
-        <polyline
-          points="2,16 8,16 12,5 16,27 20,16 28,16"
-          stroke={EMBER}
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-        <circle cx="29.5" cy="16" r="1.5" fill={EMBER} opacity="0.6" />
-      </svg>
-    )
-  }
-
+export const Logo = ({ width, height, className, onClick }: LogoProps) => {
+  const side = height ?? width ?? 32
   return (
-    <svg
-      width={width ?? 150}
-      height={height ?? 28}
-      viewBox="0 0 180 36"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
+    <Image
+      src="/logo.png"
+      alt="Domainly AI"
+      width={side}
+      height={side}
+      className={cn(
+        'shrink-0 object-contain dark:rounded-md dark:bg-white',
+        className
+      )}
       onClick={onClick}
-      role="img"
-      aria-label="Domainly AI"
-    >
-      <polyline
-        points="2,18 10,18 14,6 18,30 22,18 30,18"
-        stroke={EMBER}
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-      />
-      <circle cx="32" cy="18" r="2" fill={EMBER} opacity="0.5" />
-      <text
-        x="42"
-        y="24"
-        fontFamily="Outfit, system-ui, sans-serif"
-        fontSize="18"
-        fontWeight="600"
-        letterSpacing="-0.5"
-        className="fill-foreground"
-      >
-        Domainly AI
-      </text>
-    </svg>
+    />
   )
 }
 

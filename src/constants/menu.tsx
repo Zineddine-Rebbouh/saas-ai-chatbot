@@ -8,44 +8,74 @@ import SettingsIcon from '@/icons/settings-icon'
 import StarIcon from '@/icons/star-icon'
 import TimerIcon from '@/icons/timer-icon'
 
-type SIDE_BAR_MENU_PROPS = {
+export type SIDE_BAR_MENU_PROPS = {
   label: string
   icon: JSX.Element
   path: string
 }
 
-export const SIDE_BAR_MENU: SIDE_BAR_MENU_PROPS[] = [
+export type MENU_GROUP_PROPS = {
+  group: string
+  items: SIDE_BAR_MENU_PROPS[]
+}
+
+export const GROUPED_SIDE_BAR_MENU: MENU_GROUP_PROPS[] = [
   {
-    label: 'Dashboard',
-    icon: <DashboardIcon />,
-    path: 'dashboard',
+    group: 'WORKSPACE',
+    items: [
+      {
+        label: 'Dashboard',
+        icon: <DashboardIcon />,
+        path: 'dashboard',
+      },
+      {
+        label: 'Conversations',
+        icon: <ChatIcon />,
+        path: 'conversation',
+      },
+      {
+        label: 'Appointments',
+        icon: <CalIcon />,
+        path: 'appointment',
+      },
+    ],
   },
   {
-    label: 'Conversations',
-    icon: <ChatIcon />,
-    path: 'conversation',
+    group: 'GROWTH',
+    items: [
+      {
+        label: 'Email Marketing',
+        icon: <EmailIcon />,
+        path: 'email-marketing',
+      },
+    ],
   },
   {
-    label: 'Integrations',
-    icon: <IntegrationsIcon />,
-    path: 'integration',
+    group: 'TOOLS & AI',
+    items: [
+      {
+        label: 'Integrations',
+        icon: <IntegrationsIcon />,
+        path: 'integration',
+      },
+    ],
   },
   {
-    label: 'Settings',
-    icon: <SettingsIcon />,
-    path: 'settings',
-  },
-  {
-    label: 'Appointments',
-    icon: <CalIcon />,
-    path: 'appointment',
-  },
-  {
-    label: 'Email Marketing',
-    icon: <EmailIcon />,
-    path: 'email-marketing',
+    group: 'ACCOUNT',
+    items: [
+      {
+        label: 'Settings',
+        icon: <SettingsIcon />,
+        path: 'settings',
+      },
+    ],
   },
 ]
+
+export const SIDE_BAR_MENU: SIDE_BAR_MENU_PROPS[] = GROUPED_SIDE_BAR_MENU.flatMap(
+  (g) => g.items
+)
+
 
 type TABS_MENU_PROPS = {
   label: string

@@ -10,7 +10,7 @@ type Props = {
     | {
         id: string
         name: string
-        icon: string
+        icon: string | null
       }[]
     | null
     | undefined

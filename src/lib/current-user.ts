@@ -1,9 +1,10 @@
 // Request-scoped Clerk auth + Prisma user identity for authenticated routes.
-// Uses React `cache` so every call in the same server render/request shares one
-// Clerk lookup and at most one Prisma `user` query — never a global cache, so
-// one user's row can never leak into another user's request.
+// `auth()` is a synchronous local session read, and `auth().userId` is stable
+// across calls in the same request. Prisma identity is React-cached so every
+// call in the same server render shares it — never a global cache, so one
+// user's row can never leak into another user's request.
 import { cache } from 'react'
-import { currentUser } from '@clerk/nextjs'
+import { auth } from '@clerk/nextjs/server'
 import { client } from '@/lib/prisma'
 
 export type RequestUser = {
@@ -14,22 +15,22 @@ export type RequestUser = {
   stripeId: string | null
 }
 
-// Clerk's `currentUser()` performs an auth lookup on every call. Cache it per
-// request so parallel dashboard actions do not repeat that work.
-export const getClerkUserId = cache(async (): Promise<string | null> => {
+// The Clerk userId for this request. `auth()` reads the session locally
+// (JWT verification), so this performs no Clerk HTTP call unlike the old
+// `currentUser()` path that fetched the full profile on every call.
+export const getClerkUserId = async (): Promise<string | null> => {
   try {
-    const user = await currentUser()
-    return user?.id ?? null
+    return auth().userId ?? null
   } catch {
     return null
   }
-})
+}
 
 export const getCurrentUser = cache(async (): Promise<RequestUser | null> => {
-  const clerkUser = await currentUser()
-  if (!clerkUser) return null
+  const clerkId = await getClerkUserId()
+  if (!clerkId) return null
   const row = await client.user.findUnique({
-    where: { clerkId: clerkUser.id },
+    where: { clerkId },
     select: {
       id: true,
       fullname: true,
@@ -39,10 +40,20 @@ export const getCurrentUser = cache(async (): Promise<RequestUser | null> => {
   })
   if (!row) return null
   return {
-    clerkId: clerkUser.id,
+    clerkId,
     userId: row.id,
     fullname: row.fullname,
     type: row.type,
     stripeId: row.stripeId,
   }
 })
+
+// Memoised Stripe Connect account id. `getUserBalance` and
+// `getUserTransactions` call this, so one dashboard render does one user
+// lookup instead of two.
+export const getStripeAccountId = cache(
+  async (): Promise<string | null> => {
+    const user = await getCurrentUser()
+    return user?.stripeId ?? null
+  }
+)

@@ -27,6 +27,10 @@ export const metadata: Metadata = {
   keywords: ['AI chatbot', 'email marketing', 'lead capture', 'sales automation', 'SaaS'],
   authors: [{ name: 'Domainly AI' }],
   creator: 'Domainly AI',
+  icons: {
+    icon: '/logo.png',
+    apple: '/logo.png',
+  },
   metadataBase: new URL('https://domainly.ai'),
   openGraph: {
     type: 'website',
