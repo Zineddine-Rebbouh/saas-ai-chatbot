@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Domainly AI widget test</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: linear-gradient(135deg, #e0f2fe, #fce7f3);
+      min-height: 100vh;
+      margin: 0;
+      padding: 40px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Domainly AI widget test</h1>
+  <p>The chat icon should float bottom-right with NO black/white box around it.</p>
+  <script>
+    const BOT_ID = new URLSearchParams(location.search).get('id') || "d9f5125f-4f8c-4749-b293-afadec99bcad";
+    const APP_URL = "http://localhost:3000";
+    const iframe = document.createElement("iframe");
+
+    const iframeStyles = (styleString) => {
+      const style = document.createElement('style');
+      style.textContent = styleString;
+      document.head.append(style);
+    }
+
+    iframeStyles(`
+  .chat-frame {
+    position: fixed;
+    bottom: 50px;
+    right: 50px;
+    border: none;
+    background: transparent;
+    z-index: 9999;
+  }
+`)
+
+    iframe.src = APP_URL + "/chatbot"
+    iframe.classList.add('chat-frame')
+    iframe.setAttribute('frameborder', '0')
+    iframe.setAttribute('allowtransparency', 'true')
+    iframe.setAttribute('scrolling', 'no')
+    iframe.style.background = 'transparent'
+    iframe.width = 80
+    iframe.height = 80
+    document.body.appendChild(iframe)
+
+    window.addEventListener("message", (e) => {
+      if (e.origin !== APP_URL) return null
+      try {
+        let dimensions = JSON.parse(e.data)
+        iframe.width = dimensions.width
+        iframe.height = dimensions.height
+        iframe.contentWindow.postMessage(BOT_ID, APP_URL)
+      } catch { return null }
+    })
+  </script>
+</body>
+
+</html>
