@@ -39,7 +39,7 @@ const MaxMenu = ({ current, domains, onExpand, onSignOut }: Props) => {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto mt-6 pr-1 space-y-5">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden chat-window mt-6 pr-1 space-y-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         {GROUPED_SIDE_BAR_MENU.map((group) => (
           <div key={group.group} className="flex flex-col">
             <p className="text-[10px] tracking-wider text-muted-foreground/60 px-3 mb-1 uppercase font-semibold">

@@ -41,10 +41,10 @@ export const MinMenu = ({
         <MenuLogo onClick={onShrink} />
       </span>
 
-      <div className="flex-1 overflow-y-auto w-full flex flex-col items-center mt-6 space-y-4">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden chat-window w-full flex flex-col items-center mt-6 space-y-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         {GROUPED_SIDE_BAR_MENU.map((group, idx) => (
           <div key={group.group} className="w-full flex flex-col items-center">
-            {idx > 0 && <div className="w-6 h-px bg-border/60 my-2" />}
+            {idx > 0 && <div className="w-6 h-px bg-border/60 my-1" />}
             {group.items.map((menu, key) => (
               <MenuItem
                 size="min"

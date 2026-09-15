@@ -26,7 +26,7 @@ const MenuItem = ({ size, path, icon, label, current, onSignOut }: Props) => {
         <Link
           onClick={onSignOut}
           className={cn(
-            'flex items-center gap-3 px-3 py-2.5 rounded-xl my-1 text-sm font-medium transition-all duration-150',
+            'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
             isActive
               ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 font-semibold'
               : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
@@ -43,7 +43,7 @@ const MenuItem = ({ size, path, icon, label, current, onSignOut }: Props) => {
         <Link
           onClick={onSignOut}
           className={cn(
-            'flex flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 my-1 w-full transition-all duration-150',
+            'flex flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 w-full transition-all duration-150',
             isActive
               ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
               : 'text-muted-foreground hover:text-foreground hover:bg-secondary'

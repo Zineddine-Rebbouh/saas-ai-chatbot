@@ -26,19 +26,29 @@ iframeStyles(\`
     bottom: 50px;
     right: 50px;
     border: none;
+    background: transparent;
+    z-index: 9999;
   }
 \`)
 
 iframe.src = "http://localhost:3000/chatbot"
 iframe.classList.add('chat-frame')
+iframe.setAttribute('frameborder', '0')
+iframe.setAttribute('allowtransparency', 'true')
+iframe.setAttribute('scrolling', 'no')
+iframe.style.background = 'transparent'
+iframe.width = 80
+iframe.height = 80
 document.body.appendChild(iframe)
 
 window.addEventListener("message", (e) => {
   if(e.origin !== "http://localhost:3000") return null
-  let dimensions = JSON.parse(e.data)
-  iframe.width = dimensions.width
-  iframe.height = dimensions.height
-  iframe.contentWindow.postMessage("${id}", "http://localhost:3000/")
+  try {
+    let dimensions = JSON.parse(e.data)
+    iframe.width = dimensions.width
+    iframe.height = dimensions.height
+    iframe.contentWindow.postMessage("${id}", "http://localhost:3000/")
+  } catch { return null }
 })`
 
   const handleCopy = () => {

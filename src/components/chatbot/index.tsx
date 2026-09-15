@@ -1,10 +1,9 @@
 'use client'
 import { useChatBot } from '@/hooks/chatbot/use-chatbot'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { BotWindow } from './window'
 import { cn } from '@/lib/utils'
 import Image from 'next/image'
-import { BotIcon } from '@/icons/bot-icon'
 
 type Props = {}
 
@@ -24,8 +23,23 @@ const AiChatBot = (props: Props) => {
     errors,
   } = useChatBot()
 
+  // The widget lives in a tiny iframe on someone else's page: force the
+  // embed document transparent (beats the dark-theme body bg + color-scheme).
+  useEffect(() => {
+    const html = document.documentElement
+    const body = document.body
+    html.style.setProperty('background', 'transparent', 'important')
+    body.style.setProperty('background', 'transparent', 'important')
+    html.style.setProperty('color-scheme', 'light', 'important')
+    return () => {
+      html.style.removeProperty('background')
+      body.style.removeProperty('background')
+      html.style.removeProperty('color-scheme')
+    }
+  }, [])
+
   return (
-    <div className="h-screen flex flex-col justify-end items-end gap-4">
+    <div className="h-screen flex flex-col justify-end items-end gap-4 bg-transparent">
       {botOpened && (
         <BotWindow
           errors={errors}
@@ -57,7 +71,13 @@ const AiChatBot = (props: Props) => {
             fill
           />
         ) : (
-          <BotIcon />
+          <Image
+            src="/chat-bot-logo.png"
+            alt="chat"
+            fill
+            className="object-cover rounded-full"
+            priority
+          />
         )}
       </div>
     </div>

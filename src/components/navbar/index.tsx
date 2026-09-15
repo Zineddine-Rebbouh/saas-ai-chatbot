@@ -2,7 +2,7 @@
 import * as React from 'react'
 import Link from 'next/link'
 import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
-import { ArrowRight, Menu, X } from 'lucide-react'
+import { ArrowRight, LayoutDashboard, Menu, X } from 'lucide-react'
 import Logo from '@/icons/logo'
 import { cn } from '@/lib/utils'
 
@@ -83,6 +83,13 @@ function NavBar() {
             </Link>
           </SignedOut>
           <SignedIn>
+            <UserButton afterSignOutUrl="/">
+              <UserButton.UserProfileLink
+                label="Dashboard"
+                url="/dashboard"
+                labelIcon={<LayoutDashboard size={15} />}
+              />
+            </UserButton>
             <Link
               href="/dashboard"
               className="hidden items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm shadow-primary/20 transition-all duration-150 hover:bg-primary/90 sm:inline-flex"
@@ -90,7 +97,6 @@ function NavBar() {
               Dashboard
               <ArrowRight size={15} />
             </Link>
-            <UserButton afterSignOutUrl="/" />
           </SignedIn>
           <button
             className="flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:hidden"

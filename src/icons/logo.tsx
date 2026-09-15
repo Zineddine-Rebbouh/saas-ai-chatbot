@@ -17,15 +17,21 @@ type LogoProps = {
  * readable on the default dark theme while staying invisible on light.
  */
 export const Logo = ({ width, height, className, onClick }: LogoProps) => {
-  const side = height ?? width ?? 32
+  // Scale up: /logo.png is a large square lockup, so raw heights (22-28px)
+  // render the wordmark unreadably small. One multiplier fixes every caller.
+  // 2x is the max that still fits the 76px minimized sidebar + h-16 navbar.
+  const side = Math.round((height ?? width ?? 32) * 2)
   return (
     <Image
       src="/logo.png"
       alt="Domainly AI"
       width={side}
       height={side}
+      quality={100}
+      sizes={`${side}px`}
+      draggable={false}
       className={cn(
-        'shrink-0 object-contain dark:rounded-md dark:bg-white',
+        'shrink-0 select-none object-contain dark:rounded-lg dark:bg-white dark:p-0.5 dark:ring-1 dark:ring-white/30',
         className
       )}
       onClick={onClick}
