@@ -47,7 +47,7 @@ window.addEventListener("message", (e) => {
     let dimensions = JSON.parse(e.data)
     iframe.width = dimensions.width
     iframe.height = dimensions.height
-    iframe.contentWindow.postMessage("${id}", "http://localhost:3000/")
+    iframe.contentWindow.postMessage("${id}", "http://localhost:3000")
   } catch { return null }
 })`
 
