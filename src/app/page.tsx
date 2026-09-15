@@ -1,4 +1,4 @@
-import { onGetBlogPosts } from '@/actions/landing'
+import { onGetBlogPosts, resolveBlogImage } from '@/actions/landing'
 import NavBar from '@/components/navbar'
 import { pricingCards } from '@/constants/landing-page'
 import Logo from '@/icons/logo'
@@ -327,11 +327,7 @@ export default async function Home() {
                   <article className="bg-card border border-border rounded-2xl overflow-hidden hover:border-border/80 transition-all duration-200 hover:-translate-y-1 h-full flex flex-col">
                     <div className="relative w-full aspect-video overflow-hidden">
                       <Image
-                        src={
-                          post.image.startsWith('/')
-                            ? post.image
-                            : `${process.env.CLOUDWAYS_UPLOADS_URL}${post.image}`
-                        }
+                        src={resolveBlogImage(post.image)}
                         alt={post.title}
                         fill
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -340,14 +336,15 @@ export default async function Home() {
                     </div>
                     <div className="p-6 flex flex-col gap-3 flex-1">
                       <p className="text-xs text-muted-foreground">
-                        {getMonthName(post.createdAt.getMonth())}{' '}
-                        {post.createdAt.getDate()}, {post.createdAt.getFullYear()}
+                        {getMonthName(new Date(post.createdAt).getMonth())}{' '}
+                        {new Date(post.createdAt).getDate()},{' '}
+                        {new Date(post.createdAt).getFullYear()}
                       </p>
                       <h3 className="font-display font-semibold text-foreground group-hover:text-primary transition-colors duration-150">
                         {post.title}
                       </h3>
                       <div className="text-sm text-muted-foreground line-clamp-2">
-                        {post.content
+                        {(post.content ?? '')
                           .replace(/<[^>]*>/g, ' ')
                           .replace(/\s+/g, ' ')
                           .trim()

@@ -22,7 +22,8 @@ const PostPage = async ({ params }: Props) => {
   const post = await onGetBlogPost(params.id)
   // Unknown/invalid id (or unreachable API with no mock match) → real 404
   if (!post) notFound()
-  const { createdAt, title, content } = post
+  const { title, content } = post
+  const createdAt = new Date(post.createdAt)
 
   return (
     <div className="container flex justify-center my-10">
@@ -33,7 +34,7 @@ const PostPage = async ({ params }: Props) => {
         </CardDescription>
         <h2 className="text-6xl font-bold">{title}</h2>
         <div className="text-xl parsed-container flex flex-col mt-10 gap-10">
-          {parse(content)}
+          {parse(content ?? '')}
         </div>
       </div>
     </div>

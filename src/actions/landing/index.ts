@@ -24,6 +24,14 @@ const MOCK_POSTS = [
   }
 ]
 
+export const resolveBlogImage = (image: string) => {
+  if (!image) return '/images/blog-posts.jpg'
+  if (image.startsWith('/') || image.startsWith('http')) return image
+  const base = process.env.CLOUDWAYS_UPLOADS_URL ?? ''
+  if (!base) return '/images/blog-posts.jpg'
+  return `${base.replace(/\/+$/, '')}/${image.replace(/^\/+/, '')}`
+}
+
 export const onGetBlogPosts = async () => {
   try {
     const postArray: {
@@ -36,7 +44,7 @@ export const onGetBlogPosts = async () => {
     const postsUrl = process.env.CLOUDWAYS_POSTS_URL
     if (!postsUrl) return MOCK_POSTS
     
-    const postsRes = await fetch(postsUrl)
+    const postsRes = await fetch(postsUrl, { signal: AbortSignal.timeout(5000) })
     if (!postsRes.ok) return MOCK_POSTS
     const postsData = await postsRes.json()
     
@@ -46,7 +54,7 @@ export const onGetBlogPosts = async () => {
     let i = 0
     while (i < postsData.length) {
       const imageUrl = `${featuredImages}/${postsData[i].featured_media}`
-      const imageRes = await fetch(imageUrl)
+      const imageRes = await fetch(imageUrl, { signal: AbortSignal.timeout(5000) })
       if (imageRes.ok) {
         const imageData = await imageRes.json()
         if (imageData && imageData.media_details) {
@@ -58,7 +66,7 @@ export const onGetBlogPosts = async () => {
             content: string
             createdAt: Date
           } = {
-            id: postsData[i].id,
+            id: String(postsData[i].id),
             title: postsData[i].title.rendered,
             image: imageData.media_details.file,
             content: postsData[i].content.rendered,
@@ -87,30 +95,38 @@ export const onGetBlogPost = async (id: string) => {
       return MOCK_POSTS.find((p) => p.id === id)
     }
     
-    const postRes = await fetch(`${postUrl}/${id}`)
+    const postRes = await fetch(`${postUrl}/${id}`, { signal: AbortSignal.timeout(5000) })
     if (!postRes.ok) {
       return MOCK_POSTS.find((p) => p.id === id)
     }
     const postData = await postRes.json()
     
     if (postData) {
+      const base = {
+        id: String(postData.id ?? id),
+        title: postData.title?.rendered ?? 'Untitled',
+        content: postData.content?.rendered ?? '',
+        createdAt: new Date(postData.date ?? Date.now()),
+      }
       const authorUrl = process.env.CLOUDWAYS_USERS_URL
-      if (!authorUrl) return
-      
-      const authorRes = await fetch(`${authorUrl}${postData.author}`)
-      if (authorRes.ok) {
-        const authorData = await authorRes.json()
-        if (authorData) {
-          return {
-            id: postData.id,
-            title: postData.title.rendered,
-            content: postData.content.rendered,
-            createdAt: new Date(postData.date),
-            author: authorData.name,
+      if (!authorUrl) return { ...base, author: 'Domainly Team' }
+
+      try {
+        const authorRes = await fetch(`${authorUrl}${postData.author}`, {
+          signal: AbortSignal.timeout(5000),
+        })
+        if (authorRes.ok) {
+          const authorData = await authorRes.json()
+          if (authorData) {
+            return { ...base, author: authorData.name ?? 'Domainly Team' }
           }
         }
+      } catch {
+        // fall through to default author below
       }
+      return { ...base, author: 'Domainly Team' }
     }
+    return MOCK_POSTS.find((p) => p.id === id)
   } catch (error) {
     console.warn('WordPress blog source offline, trying mock posts for ID:', id)
     return MOCK_POSTS.find((p) => p.id === id)
