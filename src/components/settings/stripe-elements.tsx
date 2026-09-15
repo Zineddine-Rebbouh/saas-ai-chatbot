@@ -9,9 +9,15 @@ import { isStripeConfigured, getStripe } from '@/lib/utils'
 
 type StripeElementsProps = {
   payment: 'STANDARD' | 'PRO' | 'ULTIMATE'
+  currentPlan: 'STANDARD' | 'PRO' | 'ULTIMATE'
+  onSuccess?: (plan: 'STANDARD' | 'PRO' | 'ULTIMATE') => void
 }
 
-export const StripeElements = ({ payment }: StripeElementsProps) => {
+export const StripeElements = ({
+  payment,
+  currentPlan,
+  onSuccess,
+}: StripeElementsProps) => {
   const [stripePromise, setStripePromise] = useState<any>(null)
 
   useEffect(() => {
@@ -23,20 +29,41 @@ export const StripeElements = ({ payment }: StripeElementsProps) => {
   }, [])
 
   const { stripeSecret, loadForm } = useStripeElements(payment)
-  return (
-    stripeSecret &&
-    stripePromise &&
-    (payment == 'PRO' || payment == 'ULTIMATE') && (
-      <Loader loading={loadForm}>
-        <Elements
-          stripe={stripePromise}
-          options={{
-            clientSecret: stripeSecret,
-          }}
-        >
-          <PaymentForm plan={payment} />
-        </Elements>
+
+  if (payment !== 'PRO' && payment !== 'ULTIMATE') return null
+
+  if (!isStripeConfigured) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        Stripe is not configured. Add NEXT_PUBLIC_STRIPE_PUBLISH_KEY to enable
+        checkout.
+      </p>
+    )
+  }
+
+  if (loadForm || !stripeSecret || !stripePromise) {
+    return (
+      <Loader loading={loadForm || !stripeSecret}>
+        <div className="h-24" />
       </Loader>
     )
+  }
+
+  // key forces Elements to remount on a new intent — otherwise Stripe keeps
+  // charging the previous plan's amount and verification fails.
+  return (
+    <Elements
+      key={stripeSecret}
+      stripe={stripePromise}
+      options={{
+        clientSecret: stripeSecret,
+      }}
+    >
+      <PaymentForm
+        plan={payment}
+        currentPlan={currentPlan}
+        onSuccess={onSuccess}
+      />
+    </Elements>
   )
 }
